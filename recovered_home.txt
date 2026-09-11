@@ -1,0 +1,632 @@
+Created At: 2026-09-04T01:15:17+07:00
+Completed At: 2026-09-04T01:15:17+07:00
+File Path: `file:///C:/Kanvue/src/views/HomeView.vue`
+Total Lines: 624
+Total Bytes: 35760
+Showing lines 1 to 624
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: <template>
+2:   <div class="bg-gray-50 min-h-screen pb-20 font-sans">
+3:     
+4:     <div class="max-w-[1500px] mx-auto px-4 md:px-8 pt-4">
+5:       <!-- 1. Hero Banner Wrapper -->
+6:       <div class="relative mb-24">
+7:         
+8:         <!-- Image & Background (Rounded and Clipped) -->
+9:         <div class="w-full h-[380px] md:h-[450px] rounded-3xl overflow-hidden relative shadow-sm group">
+10:           <transition-group name="fade" tag="div" class="relative w-full h-full">
+11:             <div v-for="(slide, index) in heroSlides" :key="index" v-show="currentSlide === index" class="absolute inset-0 w-full h-full">
+12:               <img :src="slide.image" class="absolute inset-0 w-full h-full object-cover transition-transform duration-[10000ms]" :class="currentSlide === index ? 'scale-110' : 'scale-100'" alt="Kanchanaburi Landscape" />
+13:               <div class="absolute inset-0 bg-gradient-to-r from-[#002244]/95 via-[#002244]/50 to-transparent"></div>
+14:               
+15:               <!-- Content Container -->
+16:               <div class="relative w-full h-full px-6 md:px-16 flex flex-col justify-center">
+17:                 
+18:                 <!-- Left Text -->
+19:                 <div class="text-white z-10 w-full md:w-auto -mt-10 transform transition-all duration-700" :class="currentSlide === index ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'">
+20:                   <div class="flex items-center gap-1.5 text-sm font-bold mb-4 text-yellow-400">
+21:                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+22:                     กาญจนบุรี
+23:                   </div>
+24:                   <h2 class="text-3xl md:text-5xl font-bold mb-2 tracking-tight text-white/90">{{ slide.subtitle }}</h2>
+25:                   <h1 class="text-6xl md:text-[90px] font-black mb-6 tracking-tight drop-shadow-lg leading-none">{{ slide.title }}</h1>
+26:                   <p class="text-lg md:text-xl text-white/90 max-w-xl font-medium leading-relaxed drop-shadow-sm">{{ slide.desc }}</p>
+27:                 </div>
+28: 
+29:               </div>
+30:             </div>
+31:           </transition-group>
+32: 
+33:           <!-- Slider Navigation Arrows (Kept) -->
+34:           
+35:           <button @click="prevSlide" class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center backdrop-blur-sm transition opacity-0 group-hover:opacity-100 z-10">
+36:             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+37:           </button>
+38:           <button @click="nextSlide" class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center backdrop-blur-sm transition opacity-0 group-hover:opacity-100 z-10">
+39:             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+40:           </button>
+41:         </div>
+42: 
+43:         <!-- Floating Search Bar (Rounded Square Shape) -->
+44:         <div class="absolute -bottom-10 left-0 right-0 z-20 px-4">
+45:           <div class="max-w-[1150px] mx-auto bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-3xl px-6 py-4 flex flex-col md:flex-row justify-between items-center border border-gray-100">
+46:             <div class="flex flex-wrap md:flex-nowrap w-full divide-x divide-gray-100">
+47:               
+48:               <!-- สถานที่ -->
+49:               <div class="flex-1 flex items-center gap-3 px-4 md:px-6 py-2 relative">
+50:                 <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+51:                   <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+52:                 </div>
+53:                 <div class="flex flex-col w-full">
+54:                   <span class="text-sm font-extrabold text-gray-900 mb-0.5">สถานที่</span>
+55:                   <CustomDropdown v-model="filterCategory" :options="['ทั้งหมด', 'ธรรมชาติ', 'คาเฟ่', 'ประวัติศาสตร์', 'วัด']" placeholder="เลือกสถานที่" />
+56:                 </div>
+57:               </div>
+58: 
+59:               <!-- พื้นที่ -->
+60:               <div class="flex-1 flex items-center gap-3 px-4 md:px-6 py-2 relative">
+61:                 <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+62:                   <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+63:                 </div>
+64:                 <div class="flex flex-col w-full">
+65:                   <span class="text-sm font-extrabold text-gray-900 mb-0.5">พื้นที่</span>
+66:                   <CustomDropdown v-model="filterArea" :options="['ทุกอำเภอ', 'เมืองกาญจนบุรี', 'ไทรโยค', 'ศรีสวัสดิ์', 'สังขละบุรี']" placeholder="เลือกอำเภอ" />
+67:                 </div>
+68:               </div>
+69: 
+70:               <!-- ช่วงเวลา -->
+71:               <div class="flex-1 hidden md:flex items-center gap-3 px-4 md:px-6 py-2 relative">
+72:                 <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+73:                   <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+74:                 </div>
+75:                 <div class="flex flex-col w-full">
+76:                   <span class="text-sm font-extrabold text-gray-900 mb-0.5">ช่วงเวลา</span>
+77:                   <CustomDropdown v-model="filterTime" :options="['ไม่จำกัด', 'เช้า', 'บ่าย', 'เย็น', 'ค่ำ']" placeholder="เลือกช่วงเวลา" />
+78:                 </div>
+79:               </div>
+80: 
+81:               <!-- ประเภท -->
+82:               <div class="flex-1 hidden lg:flex items-center gap-3 px-4 md:px-6 py-2 relative">
+83:                 <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+84:                   <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+85:                 </div>
+86:                 <div class="flex flex-col w-full">
+87:                   <span class="text-sm font-extrabold text-gray-900 mb-0.5">ประเภท</span>
+88:                   <CustomDropdown v-model="filterType" :options="['ไม่สำคัญ', 'ไปกลับ', 'ค้างคืน']" placeholder="เลือกประเภท" />
+89:                 </div>
+90:               </div>
+91: 
+92:             </div>
+93:             
+94:             <button @click="handleSearch" class="bg-blue-600 text-white px-10 py-4 rounded-2xl font-bold text-base ml-2 hover:bg-blue-700 transition shadow-md shrink-0 flex items-center gap-2 mt-4 md:mt-0 w-full md:w-auto justify-center ml-4">
+95:               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+96:               ค้นหา
+97:             </button>
+98:           </div>
+99:         </div>
+100:       </div>
+101: 
+102:       <!-- MAIN GRID CONTENT -->
+103:       <div class="py-4">
+104: 
+105:       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+106:         
+107:         <!-- ================= LEFT COLUMN (MAIN CONTENT) ================= -->
+108:         <div class="lg:col-span-8 flex flex-col gap-8">
+109:           
+110:           <!-- Search Results Block -->
+111:           <div v-if="isSearching" id="search-results" class="mt-4">
+112:             <div class="flex justify-between items-end mb-6">
+113:               <div>
+114:                 <h2 class="text-3xl font-extrabold text-[#003366]">ผลการค้นหา ({{ searchResults.length }})</h2>
+115:                 <p class="text-gray-500 text-sm mt-1">ตามตัวกรองที่คุณเลือกไว้</p>
+116:               </div>
+117:               <button @click="clearSearch" class="text-red-500 font-bold text-sm hover:underline flex items-center gap-1">
+118:                 ล้างการค้นหา <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+119:               </button>
+120:             </div>
+121:             
+122:             <div v-if="searchResults.length === 0" class="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-100">
+123:                <p class="text-gray-500 font-bold">ไม่พบสถานที่ที่ตรงกับเงื่อนไข ลองเปลี่ยนตัวกรองดูนะครับ</p>
+124:             </div>
+125:             
+126:             <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
+127:               <PlaceCard 
+128:                 v-for="place in searchResults" 
+129:                 :key="place.id"
+130:                 :id="place.id"
+131:                 :title="place.name"
+132:                 :description="place.description"
+133:                 :location="place.location?.address || 'กาญจนบุรี'"
+134:                 :category="place._type"
+135:                 :priceText="place.entranceFee ? place.entranceFee + ' บาท' : (place.pricePerNight ? 'เริ่มต้น ' + place.pricePerNight + ' บาท' : (place.priceRange || 'ฟรี'))"
+136:                 :imageUrl="getImageUrl(place)"
+137:               />
+138:             </div>
+139:           </div>
+140:           
+141:           <div v-show="!isSearching" class="flex flex-col gap-8">
+142:             <!-- 2. Recommended Places Grid -->
+143:           <div class="flex justify-between items-end mt-4">
+144:             <div>
+145:               <h2 class="text-2xl font-extrabold text-[#003366]">สถานที่แนะนำสำหรับคุณ</h2>
+146:               <p class="text-gray-500 text-sm mt-1">อิงจากความนิยมในช่วงนี้</p>
+147:             </div>
+148:             <RouterLink to="/places" class="text-blue-600 font-bold text-sm hover:underline flex items-center gap-1">ดูทั้งหมด <ArrowRightIcon class="w-4 h-4"/></RouterLink>
+149:           </div>
+150: 
+151:           <div v-if="loading" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+152:             <!-- Skeleton Card 1 -->
+153:             <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 animate-pulse">
+154:               <div class="w-full h-48 bg-gray-200 rounded-2xl mb-4"></div>
+155:               <div class="h-6 bg-gray-200 rounded-full w-3/4 mb-3"></div>
+156:               <div class="flex gap-2 mb-3">
+157:                 <div class="h-5 bg-gray-100 rounded-full w-16"></div>
+158:                 <div class="h-5 bg-gray-100 rounded-full w-12"></div>
+159:               </div>
+160:               <div class="h-4 bg-gray-100 rounded-full w-full mb-2"></div>
+161:               <div class="h-4 bg-gray-100 rounded-full w-5/6 mb-4"></div>
+162:               <div class="flex justify-between items-center mt-2 pt-4 border-t border-gray-50">
+163:                 <div class="h-5 bg-gray-200 rounded-full w-20"></div>
+164:                 <div class="h-8 bg-gray-200 rounded-xl w-24"></div>
+165:               </div>
+166:             </div>
+167:             <!-- Skeleton Card 2 -->
+168:             <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 animate-pulse hidden md:block">
+169:               <div class="w-full h-48 bg-gray-200 rounded-2xl mb-4"></div>
+170:               <div class="h-6 bg-gray-200 rounded-full w-2/3 mb-3"></div>
+171:               <div class="flex gap-2 mb-3">
+172:                 <div class="h-5 bg-gray-100 rounded-full w-20"></div>
+173:                 <div class="h-5 bg-gray-100 rounded-full w-16"></div>
+174:               </div>
+175:               <div class="h-4 bg-gray-100 rounded-full w-full mb-2"></div>
+176:               <div class="h-4 bg-gray-100 rounded-full w-4/5 mb-4"></div>
+177:               <div class="flex justify-between items-center mt-2 pt-4 border-t border-gray-50">
+178:                 <div class="h-5 bg-gray-200 rounded-full w-16"></div>
+179:                 <div class="h-8 bg-gray-200 rounded-xl w-24"></div>
+180:               </div>
+181:             </div>
+182:             <!-- Skeleton Card 3 -->
+183:             <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 animate-pulse hidden md:block">
+184:               <div class="w-full h-48 bg-gray-200 rounded-2xl mb-4"></div>
+185:               <div class="h-6 bg-gray-200 rounded-full w-5/6 mb-3"></div>
+186:               <div class="flex gap-2 mb-3">
+187:                 <div class="h-5 bg-gray-100 rounded-full w-14"></div>
+188:                 <div class="h-5 bg-gray-100 rounded-full w-20"></div>
+189:               </div>
+190:               <div class="h-4 bg-gray-100 rounded-full w-full mb-2"></div>
+191:               <div class="h-4 bg-gray-100 rounded-full w-3/4 mb-4"></div>
+192:               <div class="flex justify-between items-center mt-2 pt-4 border-t border-gray-50">
+193:                 <div class="h-5 bg-gray-200 rounded-full w-24"></div>
+194:                 <div class="h-8 bg-gray-200 rounded-xl w-24"></div>
+195:               </div>
+196:             </div>
+197:           </div>
+198:           <div v-else-if="errorMsg" class="bg-red-50 text-red-600 p-4 rounded-xl text-center font-bold">
+199:             {{ errorMsg }}
+200:           </div>
+201:           <div v-else-if="attractions.length === 0" class="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-100">
+202:              <p class="text-gray-500 font-bold">ยังไม่มีข้อมูลในระบบ (Database ว่างเปล่า)</p>
+203:           </div>
+204:           <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
+205:             <PlaceCard 
+206:               v-for="place in attractions.slice(0,3)" 
+207:               :key="place.id"
+208:               :id="place.id"
+209:               :title="place.name"
+210:               :description="place.description"
+211:               :location="'กาญจนบุรี'"
+212:               :category="'ยอดฮิต'"
+213:               :priceText="place.entranceFee ? place.entranceFee + ' บาท' : 'ฟรี'"
+214:               :imageUrl="getImageUrl(place)"
+215:             />
+216:           </div>
+217: 
+218:           <!-- 3. AI Trip Planner Banner -->
+219:           <div class="mt-6 mb-8 relative rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-gradient-to-br from-indigo-900 via-[#002244] to-blue-900 border border-indigo-500/20">
+220:             <!-- Decorative background elements -->
+221:             <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl"></div>
+222:             <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 bg-blue-500/20 rounded-full blur-2xl"></div>
+223:             
+224:             <div class="relative p-8 md:p-10 flex flex-col md:flex-row gap-8 items-center">
+225:               <div class="flex-1 text-center md:text-left">
+226:                 <div class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 font-bold text-xs rounded-full mb-4">
+227:                   <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+228:                   <span>AI TRIP PLANNER</span>
+229:                 </div>
+230:                 <h3 class="text-2xl md:text-3xl font-black text-white mb-3 tracking-tight">ให้ AI จัดทริปกาญจนบุรีให้คุณ</h3>
+231:                 <p class="text-indigo-200/80 text-sm md:text-base max-w-lg mb-6 leading-relaxed">บอกเราว่าคุณอยากเที่ยวแบบไหน (เช่น "One day trip เน้นคาเฟ่" หรือ "เที่ยวสายมู 2 วัน 1 คืน") AI ของเราจะคำนวณเส้นทาง เวลา และค่าใช้จ่ายให้ทันที!</p>
+232:                 
+233:                 <div class="relative max-w-xl">
+234:                   <input 
+235:                     v-model="aiPrompt" 
+236:                     @keyup.enter="generateAITrip"
+237:                     type="text" 
+238:                     placeholder="เช่น อยากเที่ยวน้ำตก 1 วันเต็ม..." 
+239:                     class="w-full bg-white/10 border border-white/20 text-white placeholder-indigo-300/50 rounded-2xl py-4 pl-5 pr-32 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all backdrop-blur-sm"
+240:                     :disabled="isGeneratingAI"
+241:                   />
+242:                   <button 
+243:                     @click="generateAITrip"
+244:                     :disabled="!aiPrompt || isGeneratingAI"
+245:                     class="absolute right-2 top-2 bottom-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 text-white px-5 rounded-xl font-bold transition-colors flex items-center gap-2"
+246:                   >
+247:                     <span v-if="!isGeneratingAI">จัดทริป</span>
+248:                     <span v-else class="flex items-center gap-2">
+249:                       <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+250:                       กำลังคิด...
+251:                     </span>
+252:                   </button>
+253:                 </div>
+254:               </div>
+255:               
+256: 
+257:             </div>
+258:           </div>
+259:           </div>
+260: 
+261: 
+262:         </div>
+263: 
+264:         <!-- ================= RIGHT COLUMN (USER DASHBOARD SIDEBAR) ================= -->
+265:         <div class="lg:col-span-4 flex flex-col gap-6">
+266:           
+267:           <!-- Box 1: Trip Status Widget -->
+268:           <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-6 text-white shadow-lg shadow-blue-600/20 relative overflow-hidden">
+269:             <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+270:             <div class="flex items-center gap-4 mb-4">
+271:               <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
+272:                 <CalendarIcon class="w-6 h-6 text-white" />
+273:               </div>
+274:               <div>
+275:                 <h3 class="font-extrabold text-lg">ทริปการเดินทางของฉัน</h3>
+276:                 <p class="text-blue-100 text-sm">พร้อมออกเดินทางหรือยัง?</p>
+277:               </div>
+278:             </div>
+279:             
+280:             <div class="bg-black/20 rounded-2xl p-4 flex items-center justify-between backdrop-blur-sm border border-white/10">
+281:               <div>
+282:                 <div class="text-3xl font-black">{{ tripStore.tripItems.length }}<span class="text-base font-normal text-blue-200 ml-1">สถานที่</span></div>
+283:               </div>
+284:               <RouterLink to="/trip-planner" class="bg-white text-[#003366] px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 transition shadow-sm">
+285:                 จัดการแพลน
+286:               </RouterLink>
+287:             </div>
+288:           </div>
+289: 
+290:           <!-- Box 2: Favorites Widget -->
+291:           <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex items-center justify-between">
+292:             <div class="flex items-center gap-4">
+293:               <div class="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500">
+294:                 <HeartIcon class="w-6 h-6 fill-red-100" />
+295:               </div>
+296:               <div>
+297:                 <h3 class="font-extrabold text-gray-900">รายการที่กดใจไว้</h3>
+298:                 <p class="text-gray-500 text-sm">สถานที่โปรด 5 แห่ง</p>
+299:               </div>
+300:             </div>
+301:             <button class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center hover:bg-gray-100 transition"><ArrowRightIcon class="w-4 h-4 text-gray-600"/></button>
+302:           </div>
+303: 
+304:           <!-- Box 3: Mini Itinerary Timeline -->
+305:           <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex-grow">
+306:             <div class="flex justify-between items-end mb-6 border-b border-gray-50 pb-4">
+307:               <h3 class="font-extrabold text-[#003366] flex items-center gap-2">
+308:                 <MapIcon class="w-5 h-5 text-blue-600" /> เส้นทางในแพลน
+309:               </h3>
+310:               <RouterLink to="/trip-planner" class="text-xs text-[#003366] font-bold hover:underline">ดูทั้งหมด</RouterLink>
+311:             </div>
+312: 
+313:             <div v-if="tripStore.tripItems.length === 0" class="text-center py-10">
+314:               <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+315:                 <MapPinIcon class="w-6 h-6 text-gray-300" />
+316:               </div>
+317:               <p class="text-gray-500 text-sm font-medium">ยังไม่มีสถานที่ในแพลน<br/>ลองกดเพิ่มสถานที่ดูสิ!</p>
+318:             </div>
+319: 
+320:             <div v-else class="flex flex-col gap-0 relative pl-4">
+321:               <div class="absolute left-[23px] top-4 bottom-8 w-0.5 border-l-2 border-dotted border-gray-400 z-0"></div>
+322:               
+323:               <RouterLink :to="`/place/${item.id}`" v-for="(item, index) in tripStore.tripItems.slice(0,5)" :key="index" class="flex gap-3 items-center mb-4 relative z-10 group cursor-pointer w-full">
+324:                 <!-- Timeline Dot -->
+325:                 <div class="w-4 h-4 bg-white border-[3px] border-blue-600 rounded-full shrink-0 shadow-sm group-hover:scale-125 transition-transform z-20"></div>
+326:                 
+327:                 <!-- Card content -->
+328:                 <div class="flex items-center gap-3 w-full bg-white group-hover:bg-blue-50/50 p-2 rounded-xl transition border border-transparent group-hover:border-blue-100">
+329:                   <!-- Thumbnail Image -->
+330:                   <div class="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-100 shadow-sm">
+331:                     <img v-if="item.img" :src="item.img" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" alt="thumbnail" />
+332:                     <div v-else class="w-full h-full flex items-center justify-center text-gray-300">
+333:                       <MapPinIcon class="w-4 h-4" />
+334:                     </div>
+335:                   </div>
+336:                   
+337:                   <!-- Text -->
+338:                   <div class="flex flex-col flex-grow">
+339:                     <div class="text-sm font-extrabold text-gray-900 mb-0.5 line-clamp-1 group-hover:text-blue-700 transition-colors">{{ item.title }}</div>
+340:                     <div class="text-[10px] font-medium text-gray-500 line-clamp-1">{{ item.location }}</div>
+341:                   </div>
+342:                 </div>
+343:               </RouterLink>
+344:               
+345:               <div v-if="tripStore.tripItems.length > 5" class="flex gap-4 items-center relative z-10">
+346:                  <div class="w-4 h-4 bg-gray-200 rounded-full shrink-0"></div>
+347:                  <div class="text-xs font-bold text-gray-400">และอีก {{ tripStore.tripItems.length - 5 }} สถานที่...</div>
+348:               </div>
+349:             </div>
+350:           </div>
+351:           </div>
+352: 
+353:         </div>
+354:       </div>
+355:     </div>
+356:   </div>
+357: </template>
+358: 
+359: <script setup>
+360: import { ref, onMounted, onUnmounted } from 'vue'
+361: import { RouterLink, useRouter } from 'vue-router'
+362: import { CalendarIcon, HeartIcon, MapIcon, MapPinIcon, ArrowRightIcon } from 'lucide-vue-next'
+363: import api from '../services/api'
+364: import PlaceCard from '../components/PlaceCard.vue'
+365: import CustomDropdown from '../components/CustomDropdown.vue'
+366: import { useTripStore } from '../stores/trip'
+367: 
+368: const attractions = ref([])
+369: const accommodations = ref([])
+370: const restaurants = ref([])
+371: const loading = ref(true)
+372: const errorMsg = ref(null)
+373: const tripStore = useTripStore()
+374: 
+375: const heroSlides = ref([
+376:   {
+377:     image: 'https://upload.wikimedia.org/wikipedia/commons/8/86/Erawan_waterfall_tier_5.jpg',
+378:     subtitle: 'ชุ่มฉ่ำไปกับความสวยงามของ',
+379:     title: 'น้ำตกเอราวัณ',
+380:     desc: 'สวรรค์ชั้น 7 แห่งผืนป่าตะวันตก น้ำใสสีฟ้าอมเขียวมรกตที่ใครๆ ก็ต้องมาสัมผัส',
+381:     floatingText: 'ธรรมชาติ<br>บำบัด'
+382:   },
+383:   {
+384:     image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Bridge_over_River_Kwai.jpg/1280px-Bridge_over_River_Kwai.jpg',
+385:     subtitle: 'ย้อนรอยประวัติศาสตร์',
+386:     title: 'สะพานข้ามแม่น้ำแคว',
+387:     desc: 'สัญลักษณ์ทางประวัติศาสตร์ระดับโลก เสน่ห์เหนือกาลเวลาของกาญจนบุรี',
+388:     floatingText: 'มนต์ขลัง<br>วันวาน'
+389:   },
+390:   {
+391:     image: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Srinagarind_Dam.jpg',
+392:     subtitle: 'สัมผัสความยิ่งใหญ่ของ',
+393:     title: 'เขื่อนศรีนครินทร์',
+394:     desc: 'ทะเลสาบเหนือเขื่อนที่สวยงาม พร้อมกิจกรรมทางน้ำและที่พักแพลอยน้ำมากมาย',
+395:     floatingText: 'พักกาย<br>พักใจ'
+396:   }
+397: ])
+398: const currentSlide = ref(0)
+399: let slideInterval = null
+400: 
+401: const nextSlide = () => {
+402:   currentSlide.value = (currentSlide.value + 1) % heroSlides.value.length
+403: }
+404: const prevSlide = () => {
+405:   currentSlide.value = (currentSlide.value - 1 + heroSlides.value.length) % heroSlides.value.length
+406: }
+407: const setSlide = (idx) => {
+408:   currentSlide.value = idx
+409: }
+410: 
+411: onUnmounted(() => {
+412:   if (slideInterval) clearInterval(slideInterval)
+413: })
+414: 
+415: // Filter states
+416: const filterCategory = ref('ทั้งหมด')
+417: const filterArea = ref('ทุกอำเภอ')
+418: const filterTime = ref('ไม่จำกัด')
+419: const filterType = ref('ไม่สำคัญ')
+420: 
+421: const isSearching = ref(false)
+422: const searchResults = ref([])
+423: 
+424: const handleSearch = () => {
+425:   isSearching.value = true
+426:   
+427:   const allPlaces = [
+428:     ...attractions.value.map(p => ({ ...p, _type: 'ที่เที่ยว' })),
+429:     ...accommodations.value.map(p => ({ ...p, _type: 'ที่พัก' })),
+430:     ...restaurants.value.map(p => ({ ...p, _type: 'ร้านอาหาร' }))
+431:   ]
+432: 
+433:   searchResults.value = allPlaces.filter(place => {
+434:     let match = true;
+435:     
+436:     // Filter Category
+437:     if (filterCategory.value !== 'ทั้งหมด') {
+438:         if (filterCategory.value === 'ธรรมชาติ' && !(place.description?.includes('ธรรมชาติ') || place.name?.includes('น้ำตก') || place.name?.includes('อุทยาน') || place.name?.includes('ถ้ำ') || place.name?.includes('แม่น้ำ'))) match = false;
+439:         if (filterCategory.value === 'คาเฟ่' && place._type !== 'ร้านอาหาร') match = false;
+440:         if (filterCategory.value === 'ประวัติศาสตร์' && !(place.description?.includes('ประวัติ') || place.name?.includes('ประวัติศาสตร์') || place.name?.includes('ปราสาท') || place.name?.includes('สะพาน') || place.name?.includes('สงคราม'))) match = false;
+441:         if (filterCategory.value === 'วัด' && !place.name?.includes('วัด')) match = false;
+442:     }
+443: 
+444:     // Filter Area
+445:     if (filterArea.value !== 'ทุกอำเภอ') {
+446:         if (!place.location?.address?.includes(filterArea.value) && !place.name?.includes(filterArea.value)) match = false;
+447:     }
+448: 
+449:     return match;
+450:   })
+451: 
+452:   setTimeout(() => {
+453:     document.getElementById('search-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+454:   }, 100)
+455: }
+456: 
+457: const clearSearch = () => {
+458:   isSearching.value = false
+459:   filterCategory.value = 'ทั้งหมด'
+460:   filterArea.value = 'ทุกอำเภอ'
+461:   filterTime.value = 'ไม่จำกัด'
+462:   filterType.value = 'ไม่สำคัญ'
+463: }
+464: 
+465: const getImageUrl = (item) => {
+466:   if (item.images && item.images.length > 0) {
+467:     const primary = item.images.find(img => img.isPrimary)
+468:     return primary ? primary.imageUrl : item.images[0].imageUrl
+469:   }
+470:   return item.imageUrl || item.img || ''
+471: }
+472: 
+473: import { useToast } from '../composables/useNotify'
+474: 
+475: const toast = useToast()
+476: const router = useRouter()
+477: 
+478: // AI Trip Planner State
+479: const aiPrompt = ref('')
+480: const isGeneratingAI = ref(false)
+481: 
+482: const generateAITrip = async () => {
+483:   if (!aiPrompt.value || isGeneratingAI.value) return
+484:   isGeneratingAI.value = true
+485:   
+486:   try {
+487:     // 1. Fetch all place types to pick from
+488:     const [attrRes, restRes, accRes] = await Promise.all([
+489:       api.get('/Attractions'),
+490:       api.get('/Restaurants'),
+491:       api.get('/Accommodations')
+492:     ])
+493:     
+494:     let allAttr = attrRes.data || []
+495:     let allRest = restRes.data || []
+496:     let allAcc = accRes.data || []
+497:     
+498:     // Filter out items without IDs just in case
+499:     allAttr = allAttr.filter(i => i.id)
+500:     allRest = allRest.filter(i => i.id)
+501:     allAcc = allAcc.filter(i => i.id)
+502: 
+503:     // Simulate AI thinking time
+504:     await new Promise(r => setTimeout(r, 2000))
+505:     
+506:     // Clear existing trip first
+507:     const existingItems = [...tripStore.tripItems]
+508:     for (const item of existingItems) {
+509:       await tripStore.removeItem(item.id)
+510:     }
+511: 
+512:     // Keyword heuristic matching
+513:     const prompt = aiPrompt.value.toLowerCase()
+514:     let selectedPlaces = []
+515:     
+516:     // Helper to get image
+517:     const getImg = (item) => {
+518:        if (item.images && item.images.length > 0) {
+519:           const primary = item.images.find(img => img.isPrimary)
+520:           return primary ? primary.imageUrl : item.images[0].imageUrl
+521:        }
+522:        return item.imageUrl || ''
+523:     }
+524: 
+525:     // Very basic AI logic based on prompt
+526:     if (prompt.includes('1 วัน') || prompt.includes('one day') || prompt.includes('oneday')) {
+527:        // 1 Day Trip: 2 Attractions, 1 Restaurant
+528:        if (allAttr.length > 0) selectedPlaces.push({ ...allAttr[0], startTime: '09:00', endTime: '11:30' })
+529:        if (allRest.length > 0) selectedPlaces.push({ ...allRest[0], startTime: '12:00', endTime: '13:30' })
+530:        if (allAttr.length > 1) selectedPlaces.push({ ...allAttr[1], startTime: '14:00', endTime: '16:30' })
+531:     } else if (prompt.includes('คาเฟ่') || prompt.includes('cafe')) {
+532:        // Cafe hopping: 1 Attraction, 2 Cafes/Restaurants
+533:        if (allAttr.length > 0) selectedPlaces.push({ ...allAttr[0], startTime: '10:00', endTime: '11:30' })
+534:        if (allRest.length > 0) selectedPlaces.push({ ...allRest[0], startTime: '12:00', endTime: '14:00' })
+535:        if (allRest.length > 1) selectedPlaces.push({ ...allRest[1], startTime: '15:00', endTime: '17:00' })
+536:     } else if (prompt.includes('ค้างคืน') || prompt.includes('2 วัน') || prompt.includes('2 day')) {
+537:        // 2 Days: 2 Attractions, 1 Restaurant, 1 Hotel
+538:        if (allAttr.length > 0) selectedPlaces.push({ ...allAttr[0], startTime: '10:00', endTime: '12:30' })
+539:        if (allRest.length > 0) selectedPlaces.push({ ...allRest[0], startTime: '13:00', endTime: '14:30' })
+540:        if (allAttr.length > 1) selectedPlaces.push({ ...allAttr[1], startTime: '15:00', endTime: '17:00' })
+541:        if (allAcc.length > 0) selectedPlaces.push({ ...allAcc[0], startTime: '18:00', endTime: '10:00' })
+542:     } else {
+543:        // Default fallback: 1 of each
+544:        if (allAttr.length > 0) selectedPlaces.push({ ...allAttr[0], startTime: '09:30', endTime: '11:30' })
+545:        if (allRest.length > 0) selectedPlaces.push({ ...allRest[0], startTime: '12:00', endTime: '13:30' })
+546:        if (allAcc.length > 0) selectedPlaces.push({ ...allAcc[0], startTime: '15:00', endTime: '10:00' })
+547:     }
+548: 
+549:     // Add them to the trip store sequentially
+550:     for (let i = 0; i < selectedPlaces.length; i++) {
+551:        const place = selectedPlaces[i]
+552:        await tripStore.addItem({
+553:          id: place.id,
+554:          title: place.name,
+555:          location: place.location?.address || 'กาญจนบุรี',
+556:          img: getImg(place)
+557:        })
+558:     }
+559: 
+560:     // Now update times and costs based on our AI schedule
+561:     // Note: since addItem triggers a DB fetch eventually or adds to state, we should update the item that was just added.
+562:     // However, a simpler way is to just push them and then redirect. Let's do it safely.
+563:     // For a perfect UX, we update the state directly after adding.
+564:     setTimeout(async () => {
+565:        for (let i = 0; i < selectedPlaces.length; i++) {
+566:           if (tripStore.tripItems[i]) {
+567:              await tripStore.updateItem(i, { 
+568:                 startTime: selectedPlaces[i].startTime + ':00', 
+569:                 endTime: selectedPlaces[i].endTime + ':00' 
+570:              })
+571:           }
+572:        }
+573:        toast.success('AI จัดทริปให้คุณเรียบร้อยแล้ว!')
+574:        router.push('/planner')
+575:     }, 1000)
+576: 
+577:   } catch (err) {
+578:     console.error('AI Trip Error:', err)
+579:     toast.error('ไม่สามารถเชื่อมต่อ AI ได้ กรุณาลองใหม่')
+580:   } finally {
+581:     isGeneratingAI.value = false
+582:   }
+583: }
+584: 
+585: onMounted(async () => {
+586:   slideInterval = setInterval(nextSlide, 5000)
+587:   try {
+588:     const [attRes, accRes, resRes] = await Promise.all([
+589:       api.get('/Attractions'),
+590:       api.get('/Accommodations'),
+591:       api.get('/Restaurants')
+592:     ])
+593:     attractions.value = attRes.data || []
+594:     accommodations.value = accRes.data || []
+595:     restaurants.value = resRes.data || []
+596:   } catch (err) {
+597:     console.error(err)
+598:     errorMsg.value = "ไม่สามารถเชื่อมต่อกับ Backend (API) ได้ กรุณาตรวจสอบว่า Backend ทำงานอยู่หรือไม่"
+599:   } finally {
+600:     loading.value = false
+601:   }
+602: })
+603: </script>
+604: 
+605: 
+606: 
+607: 
+608: <style scoped>
+609: .fade-enter-active, .fade-leave-active {
+610:   transition: opacity 1.5s ease;
+611: }
+612: .fade-enter-from, .fade-leave-to {
+613:   opacity: 0;
+614: }
+615: </style>
+616: 
+617: 
+618: 
+619: 
+620: 
+621: 
+622: 
+623: 
+624: 
+The above content shows the entire, complete file contents of the requested file.

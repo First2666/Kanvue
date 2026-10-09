@@ -45,12 +45,14 @@
         </nav>
         
         <div class="flex items-center gap-3 shrink-0">
-          <button @click="favoriteStore.toggleFavorite(place.id)" class="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-[#334155] font-bold text-sm hover:bg-gray-50 shadow-sm transition cursor-pointer">
-            <HeartIcon :class="['w-4 h-4', favoriteStore.isFavorite(place.id) ? 'text-red-500 fill-red-500' : '']" /> บันทึก
+          <button @click="favoriteStore.toggleFavorite(place.id)" class="group flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-[#334155] font-bold text-sm hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-md active:scale-95 shadow-sm transition-all duration-200 cursor-pointer">
+            <HeartIcon :class="['w-4 h-4 transition-transform duration-300 group-hover:scale-125', favoriteStore.isFavorite(place.id) ? 'text-red-500 fill-red-500' : 'group-hover:text-red-500 group-hover:fill-red-500']" /> บันทึก
           </button>
-          <button @click="sharePlace" class="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-[#334155] font-bold text-sm hover:bg-gray-50 shadow-sm transition cursor-pointer"><ShareIcon class="w-4 h-4" /> แชร์</button>
-          <button @click="addToTrip" class="flex items-center gap-2 px-5 py-2 rounded-full bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 shadow-sm transition cursor-pointer">
-            <PlusIcon class="w-4 h-4" /> เพิ่มลงแผนการเดินทาง
+          <button @click="sharePlace" class="group flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-[#334155] font-bold text-sm hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-md active:scale-95 shadow-sm transition-all duration-200 cursor-pointer">
+            <ShareIcon class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-12" /> แชร์
+          </button>
+          <button @click="addToTrip" class="group flex items-center gap-2 px-5 py-2 rounded-full bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-md active:scale-95 shadow-sm transition-all duration-200 cursor-pointer">
+            <PlusIcon class="w-4 h-4 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-90" /> เพิ่มลงแผนการเดินทาง
           </button>
         </div>
       </div>
@@ -471,7 +473,7 @@
 </template>
 
 <script setup>
-import { useToast } from '../composables/useNotify'
+import { useToast, useDialog } from '../composables/useNotify'
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { 
@@ -485,6 +487,7 @@ import PlaceCard from '../components/PlaceCard.vue'
 import { useTripStore } from '../stores/trip'
 import { useFavoriteStore } from '../stores/favorite'
 import api from '../services/api'
+import { formatImageUrl, getPlaceImageUrl } from '../utils/imageUrl'
 
 import { useAuthStore } from '../stores/auth'
 
@@ -628,6 +631,7 @@ const route = useRoute()
 const tripStore = useTripStore()
 const favoriteStore = useFavoriteStore()
 const toast = useToast()
+const { confirm: confirmDialog } = useDialog()
 const place = ref(null)
 const loading = ref(true)
 const error = ref(false)
@@ -638,14 +642,16 @@ const uniqueImages = computed(() => {
   let imgs = []
   if (place.value.images && place.value.images.length > 0) {
     const seen = new Set()
-    imgs = place.value.images.filter(img => {
-      if (!img || !img.imageUrl || seen.has(img.imageUrl)) return false
-      seen.add(img.imageUrl)
-      return true
-    })
+    for (const img of place.value.images) {
+      if (!img || !img.imageUrl) continue
+      const formatted = formatImageUrl(img.imageUrl)
+      if (seen.has(formatted)) continue
+      seen.add(formatted)
+      imgs.push({ ...img, imageUrl: formatted })
+    }
   }
   if (imgs.length === 0) {
-    const fallbackUrl = place.value.imageUrl || 'https://images.unsplash.com/photo-1543781255-a0bcabff3d35?w=1200&q=80'
+    const fallbackUrl = formatImageUrl(place.value.imageUrl, 'https://images.unsplash.com/photo-1543781255-a0bcabff3d35?w=1200&q=80')
     imgs = [{ id: 0, imageUrl: fallbackUrl, isPrimary: true, description: place.value.name }]
   }
   return imgs
@@ -731,33 +737,60 @@ const currentOperatingStatus = computed(() => {
 })
 
 const getImageUrl = (item) => {
-  if (item.images && item.images.length > 0) {
-    const primary = item.images.find(img => img.isPrimary)
-    const url = primary ? primary.imageUrl : item.images[0].imageUrl
-    if (url) return url
-  }
-  if (item.imageUrl) return item.imageUrl
-  if (item.placeType === 'Restaurant') return 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80'
-  if (item.placeType === 'Accommodation') return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80'
-  return 'https://images.unsplash.com/photo-1543781255-a0bcabff3d35?w=400&q=80'
+  let fallback = 'https://images.unsplash.com/photo-1543781255-a0bcabff3d35?w=400&q=80'
+  if (item?.placeType === 'Restaurant') fallback = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80'
+  if (item?.placeType === 'Accommodation') fallback = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80'
+  return getPlaceImageUrl(item, fallback)
 }
 
 const userLocation = ref(null)
 
-const startNavigation = () => {
+const startNavigation = async () => {
   if (userLocation.value) {
     userLocation.value = null;
+    toast.info('ปิดการนำทางแล้ว');
     return;
   }
 
+  const setSimulatedLocation = () => {
+    userLocation.value = { lat: 14.0228, lng: 99.5328, isSimulated: true };
+    toast.success('ใช้ตำแหน่งจำลอง (ตัวเมืองกาญจนบุรี) สำหรับนำทาง');
+  };
+
+  const handleGpsError = async (err) => {
+    console.warn("GPS Access Error:", err);
+    const isHttp = location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
+    const reasonMsg = isHttp
+      ? 'เนื่องจากเว็บเข้าใช้งานผ่าน HTTP (ยังไม่ใช่ HTTPS) เบราว์เซอร์จึงบล็อกการเข้าถึง GPS จริงตามมาตรฐานความปลอดภัย'
+      : 'ไม่สามารถระบุพิกัด GPS จริงได้';
+
+    const ok = await confirmDialog({
+      title: 'เปิดใช้ตำแหน่งจำลอง?',
+      message: `${reasonMsg}\n\nต้องการใช้ 'ตำแหน่งจำลอง (ตัวเมืองกาญจนบุรี)' เพื่อดูเส้นทางนำทางหรือไม่?`,
+      confirmText: 'ใช้ตำแหน่งจำลอง',
+      cancelText: 'ยกเลิก',
+      type: 'warning'
+    });
+
+    if (ok) {
+      setSimulatedLocation();
+    }
+  };
+
   if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      userLocation.value = { lat: pos.coords.latitude, lng: pos.coords.longitude }
-    }, (err) => {
-      alert("ไม่สามารถดึงตำแหน่งปัจจุบันได้ กรุณาอนุญาตให้ใช้งาน GPS")
-    })
+    toast.info('กำลังค้นหาพิกัด GPS...');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        userLocation.value = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        toast.success('ระบุตำแหน่งปัจจุบันสำหรับนำทางแล้ว');
+      },
+      async (err) => {
+        await handleGpsError(err);
+      },
+      { timeout: 6000 }
+    );
   } else {
-    alert("เบราว์เซอร์ของคุณไม่รองรับ GPS")
+    await handleGpsError({ message: 'Geolocation not supported' });
   }
 }
 
@@ -950,33 +983,19 @@ watch(() => route.params.id, (newId) => {
   }
 })
 
-
 const addToTrip = () => {
   if (place.value) {
+    if (!authStore.user) {
+      toast.error('กรุณาเข้าสู่ระบบก่อนเพิ่มแผนการเดินทาง')
+    } else {
+      toast.success('เพิ่มลงแผนการเดินทางแล้ว!')
+    }
     tripStore.addItem({
       id: place.value.id,
       title: place.value.name,
       location: place.value.location?.address || 'กาญจนบุรี',
       img: primaryImage.value
     })
-    toast.success('เพิ่มลงแผนการเดินทางแล้ว!')
   }
 }
 </script>
-<style scoped>
-html {
-  scroll-behavior: smooth;
-}
-</style>
-
-
-
-
-
-
-
-
-
-
-
-

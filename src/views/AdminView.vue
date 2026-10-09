@@ -245,7 +245,7 @@
                 class="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50 transition border border-transparent hover:border-slate-100"
               >
                 <div class="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/60">
-                  <img v-if="p.images && p.images[0]" :src="p.images[0].imageUrl" class="w-full h-full object-cover" />
+                  <img v-if="p.images && p.images[0]" :src="formatImageUrl(p.images[0].imageUrl)" class="w-full h-full object-cover" />
                   <div v-else class="w-full h-full flex items-center justify-center text-slate-300">
                     <ImageIcon class="w-6 h-6" />
                   </div>
@@ -397,7 +397,7 @@
             <div class="h-48 w-full bg-slate-100 relative overflow-hidden">
               <img 
                 v-if="place.images && place.images[0]" 
-                :src="place.images[0].imageUrl" 
+                :src="formatImageUrl(place.images[0].imageUrl)" 
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
               />
               <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
@@ -819,20 +819,23 @@
     </main>
 
     <!-- ==================== ADD / EDIT PLACE MODAL ==================== -->
-    <div v-if="showPlaceModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 animate-fade-in flex flex-col">
+    <div v-if="showPlaceModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 md:p-6">
+      <div class="bg-white rounded-3xl w-full max-w-5xl max-h-[92vh] overflow-hidden shadow-2xl border border-slate-100 animate-fade-in flex flex-col">
         <!-- Modal Header -->
-        <div class="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-sm z-10">
+        <div class="px-6 py-4.5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-20">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
               <Edit3 v-if="editingPlace" class="w-5 h-5" />
               <Plus v-else class="w-5 h-5" />
             </div>
             <div>
-              <h3 class="text-xl font-black text-slate-900">
+              <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
                 {{ editingPlace ? 'แก้ไขข้อมูลสถานที่' : 'เพิ่มสถานที่ใหม่' }}
+                <span class="text-xs px-2.5 py-0.5 rounded-full font-bold" :class="getTypeBadgeClass(placeForm.placeType)">
+                  {{ getTypeName(placeForm.placeType) }}
+                </span>
               </h3>
-              <p class="text-xs text-slate-400">กรอกข้อมูลและอัปโหลดรูปภาพสถานที่</p>
+              <p class="text-xs text-slate-400">กรอกข้อมูลและเลือกตำแหน่งบนแผนที่ได้อย่างสะดวกสบาย</p>
             </div>
           </div>
 
@@ -844,218 +847,423 @@
           </button>
         </div>
         
-        <!-- Modal Form -->
-        <form @submit.prevent="savePlace" class="p-6 space-y-5">
-          <!-- 1. Place Type Selector Cards -->
-          <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ประเภทสถานที่</label>
-            <div class="grid grid-cols-3 gap-3">
-              <button 
-                type="button" 
-                @click="placeForm.placeType = 'Attraction'" 
-                :class="[
-                  'p-3.5 rounded-2xl border text-left flex flex-col gap-1.5 transition-all cursor-pointer',
-                  placeForm.placeType === 'Attraction' 
-                    ? 'border-emerald-500 bg-emerald-50/50 ring-2 ring-emerald-500/20 text-emerald-900 font-bold' 
-                    : 'border-slate-200 hover:border-slate-300 text-slate-600'
-                ]"
-              >
-                <Compass class="w-5 h-5 text-emerald-600" />
-                <span class="text-xs font-extrabold">ที่เที่ยว (Attraction)</span>
-              </button>
-
-              <button 
-                type="button" 
-                @click="placeForm.placeType = 'Restaurant'" 
-                :class="[
-                  'p-3.5 rounded-2xl border text-left flex flex-col gap-1.5 transition-all cursor-pointer',
-                  placeForm.placeType === 'Restaurant' 
-                    ? 'border-amber-500 bg-amber-50/50 ring-2 ring-amber-500/20 text-amber-900 font-bold' 
-                    : 'border-slate-200 hover:border-slate-300 text-slate-600'
-                ]"
-              >
-                <Utensils class="w-5 h-5 text-amber-600" />
-                <span class="text-xs font-extrabold">ร้านอาหาร (Restaurant)</span>
-              </button>
-
-              <button 
-                type="button" 
-                @click="placeForm.placeType = 'Accommodation'" 
-                :class="[
-                  'p-3.5 rounded-2xl border text-left flex flex-col gap-1.5 transition-all cursor-pointer',
-                  placeForm.placeType === 'Accommodation' 
-                    ? 'border-indigo-500 bg-indigo-50/50 ring-2 ring-indigo-500/20 text-indigo-900 font-bold' 
-                    : 'border-slate-200 hover:border-slate-300 text-slate-600'
-                ]"
-              >
-                <BedDouble class="w-5 h-5 text-indigo-600" />
-                <span class="text-xs font-extrabold">ที่พัก (Hotel)</span>
-              </button>
-            </div>
-          </div>
-          
-          <!-- 2. Place Name -->
-          <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">ชื่อสถานที่ *</label>
-            <input 
-              type="text" 
-              v-model="placeForm.name" 
-              required 
-              placeholder="เช่น สะพานข้ามแม่น้ำแคว, น้ำตกเอราวัณ..." 
-              class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50 text-sm font-medium focus:bg-white transition"
-            />
-          </div>
-          
-          <!-- 3. Description -->
-          <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">รายละเอียดสถานที่</label>
-            <textarea 
-              v-model="placeForm.description" 
-              rows="3" 
-              placeholder="บอกเล่าความเป็นมา จุดเด่น หรือข้อมูลที่น่าสนใจ..." 
-              class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50 text-sm focus:bg-white transition resize-none"
-            ></textarea>
-          </div>
-          
-          <!-- 4. Coordinates (Latitude & Longitude) -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <MapPin class="w-3.5 h-3.5 text-blue-500" />
-                ละติจูด (Latitude)
-              </label>
-              <input 
-                type="number" 
-                step="any" 
-                v-model="placeForm.latitude" 
-                placeholder="14.0416" 
-                class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50 text-sm focus:bg-white transition"
-              />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <MapPin class="w-3.5 h-3.5 text-blue-500" />
-                ลองจิจูด (Longitude)
-              </label>
-              <input 
-                type="number" 
-                step="any" 
-                v-model="placeForm.longitude" 
-                placeholder="99.5036" 
-                class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50 text-sm focus:bg-white transition"
-              />
-            </div>
-          </div>
-
-          <!-- 5. Price / Fee -->
-          <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-              <Coins class="w-3.5 h-3.5 text-yellow-500" />
-              ค่าเข้า / ราคาโดยประมาณ (บาท)
-            </label>
-            <input 
-              type="number" 
-              v-model="placeForm.entranceFee" 
-              placeholder="0 (หากเข้าฟรี)" 
-              class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50 text-sm focus:bg-white transition"
-            />
-          </div>
-
-          <!-- 6. Image Upload Dropzone -->
-          <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-              <ImageIcon class="w-3.5 h-3.5 text-blue-500" />
-              อัปโหลดรูปภาพจากเครื่อง
-            </label>
+        <!-- Modal Form with 2 Columns -->
+        <form @submit.prevent="savePlace" class="flex-1 overflow-y-auto p-5 md:p-7 flex flex-col">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
-            <label class="border-2 border-dashed border-slate-200 hover:border-blue-500 rounded-2xl p-5 flex flex-col items-center justify-center gap-2 cursor-pointer bg-slate-50 hover:bg-blue-50/40 transition group">
-              <div class="w-12 h-12 rounded-full bg-white shadow-xs flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition">
-                <UploadCloud class="w-6 h-6" />
-              </div>
-              <div class="text-center">
-                <p class="text-xs font-bold text-slate-700">คลิกเพื่อเลือกไฟล์ หรือลากรูปภาพมาวางที่นี่</p>
-                <p class="text-[11px] text-slate-400 mt-0.5">รองรับไฟล์ JPG, PNG, WEBP (เลือกได้หลายรูป)</p>
-              </div>
-              <input 
-                type="file" 
-                @change="handleFileChange" 
-                multiple 
-                accept="image/*" 
-                class="hidden"
-              />
-            </label>
+            <!-- LEFT COLUMN: Basic Info, Type, Fee, Tags, Photos (7 cols) -->
+            <div class="lg:col-span-7 space-y-4">
+              <!-- 1. ประเภทสถานที่ -->
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">1. ประเภทสถานที่ *</label>
+                <div class="grid grid-cols-3 gap-2.5">
+                  <button 
+                    type="button" 
+                    @click="placeForm.placeType = 'Attraction'" 
+                    :class="[
+                      'p-3 rounded-2xl border text-center flex flex-col items-center gap-1.5 transition-all cursor-pointer',
+                      placeForm.placeType === 'Attraction' 
+                        ? 'border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-500/20 text-emerald-900 font-black shadow-xs' 
+                        : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
+                    ]"
+                  >
+                    <div class="w-8 h-8 rounded-xl bg-emerald-100/70 text-emerald-600 flex items-center justify-center">
+                      <Compass class="w-4.5 h-4.5" />
+                    </div>
+                    <span class="text-xs font-extrabold">ที่เที่ยว</span>
+                  </button>
+                  
+                  <button 
+                    type="button" 
+                    @click="placeForm.placeType = 'Restaurant'" 
+                    :class="[
+                      'p-3 rounded-2xl border text-center flex flex-col items-center gap-1.5 transition-all cursor-pointer',
+                      placeForm.placeType === 'Restaurant' 
+                        ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-500/20 text-amber-900 font-black shadow-xs' 
+                        : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
+                    ]"
+                  >
+                    <div class="w-8 h-8 rounded-xl bg-amber-100/70 text-amber-600 flex items-center justify-center">
+                      <Utensils class="w-4.5 h-4.5" />
+                    </div>
+                    <span class="text-xs font-extrabold">ร้านอาหาร / คาเฟ่</span>
+                  </button>
 
-            <!-- Previews of selected files -->
-            <div v-if="selectedFilePreviews.length > 0" class="mt-3 flex flex-wrap gap-2">
-              <div 
-                v-for="(preview, idx) in selectedFilePreviews" 
-                :key="idx" 
-                class="w-16 h-16 rounded-xl relative overflow-hidden border border-slate-200 group"
-              >
-                <img :src="preview" class="w-full h-full object-cover" />
+                  <button 
+                    type="button" 
+                    @click="placeForm.placeType = 'Accommodation'" 
+                    :class="[
+                      'p-3 rounded-2xl border text-center flex flex-col items-center gap-1.5 transition-all cursor-pointer',
+                      placeForm.placeType === 'Accommodation' 
+                        ? 'border-indigo-500 bg-indigo-50/60 ring-2 ring-indigo-500/20 text-indigo-900 font-black shadow-xs' 
+                        : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
+                    ]"
+                  >
+                    <div class="w-8 h-8 rounded-xl bg-indigo-100/70 text-indigo-600 flex items-center justify-center">
+                      <BedDouble class="w-4.5 h-4.5" />
+                    </div>
+                    <span class="text-xs font-extrabold">ที่พัก / รีสอร์ท</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 2. ชื่อและราคา -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="sm:col-span-2">
+                  <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">2. ชื่อสถานที่ *</label>
+                  <input 
+                    type="text" 
+                    v-model="placeForm.name" 
+                    required 
+                    placeholder="เช่น สะพานข้ามแม่น้ำแคว, น้ำตกเอราวัณ..." 
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/70 text-sm font-semibold focus:bg-white transition"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <Coins class="w-3.5 h-3.5 text-yellow-500" />
+                    {{ placeForm.placeType === 'Accommodation' ? 'ราคา/คืน (บาท)' : 'ค่าเข้า/ราคา (บาท)' }}
+                  </label>
+                  <input 
+                    type="number" 
+                    v-model="placeForm.entranceFee" 
+                    placeholder="0 (ฟรี)" 
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/70 text-sm font-semibold focus:bg-white transition"
+                  />
+                </div>
+              </div>
+
+              <!-- 3. คำอธิบาย -->
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">3. รายละเอียดสถานที่</label>
+                <textarea 
+                  v-model="placeForm.description" 
+                  rows="2" 
+                  placeholder="บอกเล่าความเป็นมา จุดเด่น กิจกรรม หรือข้อมูลแนะนำ..." 
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/70 text-sm focus:bg-white transition resize-none"
+                ></textarea>
+              </div>
+
+              <!-- 4. หมวดหมู่ & แท็ก (Dropdown Multi-Selects ประหยัดพื้นที่ สะอาดตา) -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 relative">
+                <!-- Transparent overlay to close dropdowns when clicking outside -->
+                <div 
+                  v-if="isCategoryDropdownOpen || isTagDropdownOpen" 
+                  @click="isCategoryDropdownOpen = false; isTagDropdownOpen = false" 
+                  class="fixed inset-0 z-20"
+                ></div>
+
+                <!-- Categories Dropdown -->
+                <div class="relative z-25">
+                  <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5">
+                      <Folder class="w-3.5 h-3.5 text-blue-500" />
+                      หมวดหมู่ (Categories)
+                    </span>
+                    <span v-if="placeForm.categoryIds.length > 0" class="text-[10px] text-blue-600 font-bold">
+                      เลือกแล้ว {{ placeForm.categoryIds.length }}
+                    </span>
+                  </label>
+
+                  <!-- Trigger Button -->
+                  <button 
+                    type="button" 
+                    @click="isCategoryDropdownOpen = !isCategoryDropdownOpen; isTagDropdownOpen = false"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 text-xs font-semibold text-slate-700 flex items-center justify-between transition cursor-pointer shadow-xs"
+                  >
+                    <span class="truncate">
+                      {{ placeForm.categoryIds.length === 0 ? 'เลือกหมวดหมู่... (คลิกเพื่อเลือก)' : `เลือกแล้ว (${placeForm.categoryIds.length} หมวดหมู่)` }}
+                    </span>
+                    <ChevronDown class="w-4 h-4 text-slate-400 transition-transform" :class="isCategoryDropdownOpen ? 'rotate-180' : ''" />
+                  </button>
+
+                  <!-- Floating Dropdown Menu -->
+                  <div 
+                    v-if="isCategoryDropdownOpen" 
+                    class="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl z-30 p-2 max-h-48 overflow-y-auto space-y-1 animate-fade-in"
+                  >
+                    <button 
+                      type="button"
+                      v-for="cat in allCategories" 
+                      :key="cat.id" 
+                      @click="toggleCategory(cat.id)"
+                      class="w-full px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition text-left cursor-pointer"
+                      :class="isCategorySelected(cat.id) ? 'bg-blue-50 text-blue-700 font-bold' : 'hover:bg-slate-50 text-slate-700'"
+                    >
+                      <span>{{ cat.name }}</span>
+                      <Check v-if="isCategorySelected(cat.id)" class="w-3.5 h-3.5 text-blue-600" />
+                    </button>
+                  </div>
+
+                  <!-- Selected Pills -->
+                  <div v-if="placeForm.categoryIds.length > 0" class="mt-1.5 flex flex-wrap gap-1">
+                    <span 
+                      v-for="catId in placeForm.categoryIds" 
+                      :key="catId"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200/60"
+                    >
+                      <span>{{ getCategoryNameById(catId) }}</span>
+                      <button type="button" @click.stop="toggleCategory(catId)" class="hover:text-blue-900 cursor-pointer">
+                        <X class="w-2.5 h-2.5" />
+                      </button>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Tags Dropdown -->
+                <div class="relative z-25">
+                  <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5">
+                      <Hash class="w-3.5 h-3.5 text-emerald-500" />
+                      แท็กจุดเด่น (Tags)
+                    </span>
+                    <span v-if="placeForm.tagIds.length > 0" class="text-[10px] text-emerald-600 font-bold">
+                      เลือกแล้ว {{ placeForm.tagIds.length }}
+                    </span>
+                  </label>
+
+                  <!-- Trigger Button -->
+                  <button 
+                    type="button" 
+                    @click="isTagDropdownOpen = !isTagDropdownOpen; isCategoryDropdownOpen = false"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 text-xs font-semibold text-slate-700 flex items-center justify-between transition cursor-pointer shadow-xs"
+                  >
+                    <span class="truncate">
+                      {{ placeForm.tagIds.length === 0 ? 'เลือกแท็กจุดเด่น... (คลิกเพื่อเลือก)' : `เลือกแล้ว (${placeForm.tagIds.length} แท็ก)` }}
+                    </span>
+                    <ChevronDown class="w-4 h-4 text-slate-400 transition-transform" :class="isTagDropdownOpen ? 'rotate-180' : ''" />
+                  </button>
+
+                  <!-- Floating Dropdown Menu -->
+                  <div 
+                    v-if="isTagDropdownOpen" 
+                    class="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl z-30 p-2 max-h-48 overflow-y-auto space-y-1 animate-fade-in"
+                  >
+                    <button 
+                      type="button"
+                      v-for="tag in allTags" 
+                      :key="tag.id" 
+                      @click="toggleTag(tag.id)"
+                      class="w-full px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition text-left cursor-pointer"
+                      :class="isTagSelected(tag.id) ? 'bg-emerald-50 text-emerald-700 font-bold' : 'hover:bg-slate-50 text-slate-700'"
+                    >
+                      <span>{{ tag.name }}</span>
+                      <Check v-if="isTagSelected(tag.id)" class="w-3.5 h-3.5 text-emerald-600" />
+                    </button>
+                  </div>
+
+                  <!-- Selected Pills -->
+                  <div v-if="placeForm.tagIds.length > 0" class="mt-1.5 flex flex-wrap gap-1">
+                    <span 
+                      v-for="tagId in placeForm.tagIds" 
+                      :key="tagId"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200/60"
+                    >
+                      <span>{{ getTagNameById(tagId) }}</span>
+                      <button type="button" @click.stop="toggleTag(tagId)" class="hover:text-emerald-900 cursor-pointer">
+                        <X class="w-2.5 h-2.5" />
+                      </button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 5. อัปโหลดรูปภาพ -->
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <ImageIcon class="w-3.5 h-3.5 text-blue-500" />
+                  รูปภาพสถานที่
+                </label>
+                
+                <label class="border-2 border-dashed border-slate-200 hover:border-blue-500 rounded-2xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-slate-50/50 hover:bg-blue-50/30 transition group">
+                  <UploadCloud class="w-6 h-6 text-slate-400 group-hover:text-blue-600 transition" />
+                  <p class="text-xs font-bold text-slate-700">คลิกเลือกรูปภาพ หรือลากไฟล์มาวางที่นี่</p>
+                  <p class="text-[10px] text-slate-400">รองรับ JPG, PNG, WEBP (เลือกได้หลายรูป)</p>
+                  <input type="file" @change="handleFileChange" multiple accept="image/*" class="hidden" />
+                </label>
+
+                <!-- Preview Strip -->
+                <div v-if="existingImages.length > 0 || selectedFilePreviews.length > 0" class="mt-2.5 flex flex-wrap gap-2">
+                  <!-- รูปเดิมในระบบ -->
+                  <div 
+                    v-for="img in existingImages" 
+                    :key="'exist-' + img.id" 
+                    class="w-14 h-14 rounded-xl relative overflow-hidden border border-slate-200 group shadow-xs"
+                  >
+                    <img :src="formatImageUrl(img.imageUrl)" class="w-full h-full object-cover" />
+                    <button 
+                      type="button" 
+                      @click="removeExistingImage(img.id)" 
+                      class="absolute inset-0 bg-red-600/80 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                      title="ลบรูปภาพนี้"
+                    >
+                      <X class="w-4 h-4 stroke-[3]" />
+                      <span class="text-[9px] font-black mt-0.5">ลบ</span>
+                    </button>
+                    <span v-if="img.isPrimary" class="absolute bottom-0 inset-x-0 bg-blue-600 text-[8px] text-white text-center py-0.5 font-bold">หลัก</span>
+                  </div>
+
+                  <!-- รูปใหม่ที่กำลังจะอัปโหลด -->
+                  <div 
+                    v-for="(preview, idx) in selectedFilePreviews" 
+                    :key="'new-' + idx" 
+                    class="w-14 h-14 rounded-xl relative overflow-hidden border-2 border-blue-400 group shadow-xs"
+                  >
+                    <img :src="preview" class="w-full h-full object-cover" />
+                    <button 
+                      type="button" 
+                      @click="removeNewFile(idx)" 
+                      class="absolute inset-0 bg-slate-900/80 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                      title="ยกเลิกรูปนี้"
+                    >
+                      <X class="w-4 h-4 stroke-[3]" />
+                      <span class="text-[9px] font-bold mt-0.5">ยกเลิก</span>
+                    </button>
+                    <span class="absolute top-0 right-0 bg-blue-600 text-[8px] text-white px-1 rounded-bl font-bold">ใหม่</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT COLUMN: SMART LOCATION & MAP PICKER (5 cols) -->
+            <div class="lg:col-span-5 flex flex-col space-y-3.5 bg-slate-50/80 p-5 rounded-3xl border border-slate-200/80">
+              
+              <!-- Location Header -->
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                    <MapPin class="w-4 h-4 text-blue-600" />
+                    ตำแหน่งที่ตั้ง & แผนที่
+                  </h4>
+                  <p class="text-[11px] text-slate-500 mt-0.5">เลือกอำเภอ หรือคลิกปักหมุดบนแผนที่ได้เลย</p>
+                </div>
+
                 <button 
                   type="button" 
-                  @click="removeSelectedFile(idx)" 
-                  class="absolute inset-0 bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                  @click="useCurrentGps" 
+                  :disabled="gettingGps"
+                  class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-100 hover:bg-blue-200 text-blue-700 text-[11px] font-bold transition cursor-pointer"
+                  title="ระบุพิกัดจากตำแหน่งปัจจุบัน"
                 >
-                  <X class="w-4 h-4" />
+                  <Navigation class="w-3 h-3" :class="gettingGps ? 'animate-spin' : ''" />
+                  <span>{{ gettingGps ? 'ค้นหา...' : 'GPS ของฉัน' }}</span>
                 </button>
               </div>
+
+              <!-- 1. Quick Select District Dropdown -->
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">
+                  📍 เลือกอำเภอในกาญจนบุรี (13 อำเภอ)
+                </label>
+                <select 
+                  v-model="selectedDistrict" 
+                  @change="onDistrictChange"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-xs cursor-pointer"
+                >
+                  <option value="" disabled>-- เลือกอำเภอเพื่อเล็งพิกัดทันที --</option>
+                  <option v-for="d in kanchanaburiDistricts" :key="d.name" :value="d.name">
+                    {{ d.name }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- 2. Popular Spot Shortcuts (1-Click Chips) -->
+              <div>
+                <label class="block text-[11px] font-bold text-slate-500 mb-1.5">
+                  ⚡ จุดเช็คอินยอดนิยม (คลิกครั้งเดียวปักหมุดทันที)
+                </label>
+                <div class="flex flex-wrap gap-1.5">
+                  <button 
+                    type="button"
+                    v-for="lm in popularLandmarks" 
+                    :key="lm.name"
+                    @click="selectLandmark(lm)"
+                    class="px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 hover:text-blue-600 border border-slate-200 text-[11px] font-semibold text-slate-600 transition shadow-2xs cursor-pointer"
+                  >
+                    {{ lm.name }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- 3. Search Box on Map -->
+              <div class="relative">
+                <input 
+                  type="text" 
+                  v-model="searchMapQuery" 
+                  @keyup.enter="searchMapLocation"
+                  placeholder="ค้นหาชื่อสถานที่บนแผนที่..." 
+                  class="w-full pl-8 pr-16 py-2 rounded-xl border border-slate-300 bg-white text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+                <Search class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <button 
+                  type="button" 
+                  @click="searchMapLocation" 
+                  :disabled="searchingMap"
+                  class="absolute right-1 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[10px] font-bold hover:bg-blue-700 transition cursor-pointer"
+                >
+                  {{ searchingMap ? '...' : 'ค้นหา' }}
+                </button>
+              </div>
+
+              <!-- 4. Interactive Map Container -->
+              <div class="relative rounded-2xl overflow-hidden border border-slate-200 shadow-inner bg-slate-100">
+                <div id="admin-place-map" class="w-full h-[240px] z-0"></div>
+              </div>
+
+              <!-- 5. Coordinates Display & Manual Input Toggle -->
+              <div class="bg-white p-3 rounded-2xl border border-slate-200 space-y-2 shadow-xs">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                      <Check class="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">พิกัดปัจจุบัน</p>
+                      <p class="text-xs font-black text-slate-800 font-mono">
+                        {{ placeForm.latitude }}, {{ placeForm.longitude }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button 
+                    type="button" 
+                    @click="showManualCoords = !showManualCoords"
+                    class="text-[11px] font-bold text-blue-600 hover:text-blue-700 underline cursor-pointer"
+                  >
+                    {{ showManualCoords ? 'ซ่อนตัวเลข' : 'แก้ไขตัวเลขเอง' }}
+                  </button>
+                </div>
+
+                <!-- Collapsible Manual Lat/Lng Inputs -->
+                <div v-if="showManualCoords" class="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 animate-fade-in">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-500 mb-0.5">ละติจูด (Lat)</label>
+                    <input 
+                      type="number" 
+                      step="any" 
+                      v-model="placeForm.latitude" 
+                      @input="onManualCoordinateChange"
+                      class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-mono bg-slate-50"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-500 mb-0.5">ลองจิจูด (Lng)</label>
+                    <input 
+                      type="number" 
+                      step="any" 
+                      v-model="placeForm.longitude" 
+                      @input="onManualCoordinateChange"
+                      class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-mono bg-slate-50"
+                    />
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 
-          <!-- 7. Categories Selection Chips -->
-          <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-              <Folder class="w-3.5 h-3.5 text-blue-500" />
-              หมวดหมู่ (Categories)
-            </label>
-            <div class="flex flex-wrap gap-2">
-              <button 
-                type="button"
-                v-for="cat in allCategories" 
-                :key="cat.id" 
-                @click="toggleCategory(cat.id)"
-                :class="[
-                  'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border',
-                  isCategorySelected(cat.id)
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                ]"
-              >
-                <Check v-if="isCategorySelected(cat.id)" class="w-3.5 h-3.5" />
-                <span>{{ cat.name }}</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- 8. Tags Selection Chips -->
-          <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-              <Hash class="w-3.5 h-3.5 text-emerald-500" />
-              แท็กจุดเด่น (Tags)
-            </label>
-            <div class="flex flex-wrap gap-2">
-              <button 
-                type="button"
-                v-for="tag in allTags" 
-                :key="tag.id" 
-                @click="toggleTag(tag.id)"
-                :class="[
-                  'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border',
-                  isTagSelected(tag.id)
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                ]"
-              >
-                <Check v-if="isTagSelected(tag.id)" class="w-3.5 h-3.5" />
-                <span>{{ tag.name }}</span>
-              </button>
-            </div>
-          </div>
-          
-          <!-- Modal Action Buttons -->
-          <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          <!-- Modal Action Buttons Footer -->
+          <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-end gap-3 sticky bottom-0 bg-white/95 backdrop-blur-sm -mb-2 pb-2">
             <button 
               type="button" 
               @click="closePlaceModal" 
@@ -1070,7 +1278,7 @@
             >
               <Check v-if="!saving" class="w-4 h-4" />
               <span v-if="saving">กำลังบันทึก...</span>
-              <span v-else>บันทึกข้อมูล</span>
+              <span v-else>บันทึกข้อมูลสถานที่</span>
             </button>
           </div>
         </form>
@@ -1081,10 +1289,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
+import { formatImageUrl } from '../utils/imageUrl'
 import { useToast } from '../composables/useNotify'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import {
   LayoutDashboard,
   Users,
@@ -1113,7 +1324,9 @@ import {
   Hash,
   Sparkles,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ChevronDown,
+  Navigation
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -1246,24 +1459,226 @@ const getUserAvatarColor = (id) => {
   return colors[id % colors.length]
 }
 
-// Modal State
+// Modal & Map State
 const showPlaceModal = ref(false)
 const editingPlace = ref(null)
 const saving = ref(false)
 const selectedFiles = ref([])
 const selectedFilePreviews = ref([])
+const existingImages = ref([])
+const deletedImageIds = ref([])
+const showManualCoords = ref(false)
+const selectedDistrict = ref('')
+const searchMapQuery = ref('')
+const searchingMap = ref(false)
+const gettingGps = ref(false)
+
+const isCategoryDropdownOpen = ref(false)
+const isTagDropdownOpen = ref(false)
+
+const getCategoryNameById = (id) => {
+  const cat = allCategories.value.find(c => c.id === id)
+  return cat ? cat.name : 'หมวดหมู่ #' + id
+}
+
+const getTagNameById = (id) => {
+  const tag = allTags.value.find(t => t.id === id)
+  return tag ? tag.name : 'แท็ก #' + id
+}
+
+let mapInstance = null
+let markerInstance = null
+
+// 13 Districts of Kanchanaburi
+const kanchanaburiDistricts = [
+  { name: 'อ.เมืองกาญจนบุรี (ตัวเมือง / สะพานแม่น้ำแคว)', lat: 14.0416, lng: 99.5036, locationId: 1 },
+  { name: 'อ.ไทรโยค (ถ้ำกระแซ / ทางรถไฟสายมรณะ)', lat: 14.1030, lng: 99.1678, locationId: 3 },
+  { name: 'อ.ศรีสวัสดิ์ (น้ำตกเอราวัณ / เขื่อนศรีนครินทร์)', lat: 14.3761, lng: 99.1444, locationId: 2 },
+  { name: 'อ.สังขละบุรี (สะพานมอญ / เมืองบาดาล)', lat: 15.1550, lng: 98.4550, locationId: 5 },
+  { name: 'อ.ทองผาภูมิ (บ้านอีต่อง / เหมืองปิล็อก)', lat: 14.6592, lng: 98.3712, locationId: 6 },
+  { name: 'อ.ท่าม่วง (วัดถ้ำเสือ / มีนาคาเฟ่)', lat: 13.9538, lng: 99.6052, locationId: 9 },
+  { name: 'อ.บ่อพลอย (สวนสัตว์ ซาฟารีปาร์ค)', lat: 14.2625, lng: 99.5202, locationId: 1 },
+  { name: 'อ.ด่านมะขามเตี้ย', lat: 13.8540, lng: 99.4180, locationId: 1 },
+  { name: 'อ.ท่ามะกา', lat: 13.9210, lng: 99.7610, locationId: 1 },
+  { name: 'อ.พนมทวน (พระบรมราชานุสรณ์ดอนเจดีย์)', lat: 14.1290, lng: 99.6970, locationId: 1 },
+  { name: 'อ.หนองปรือ', lat: 14.6080, lng: 99.4480, locationId: 1 },
+  { name: 'อ.เลาขวัญ', lat: 14.5950, lng: 99.7820, locationId: 1 },
+  { name: 'อ.ห้วยกระเจา', lat: 14.3290, lng: 99.8240, locationId: 1 }
+]
+
+// Popular Landmark Shortcuts
+const popularLandmarks = [
+  { name: 'สะพานข้ามแม่น้ำแคว', lat: 14.0416, lng: 99.5036, locationId: 1 },
+  { name: 'น้ำตกเอราวัณ', lat: 14.3761, lng: 99.1444, locationId: 2 },
+  { name: 'สะพานมอญ', lat: 15.1550, lng: 98.4550, locationId: 5 },
+  { name: 'ถ้ำกระแซ', lat: 14.1030, lng: 99.1678, locationId: 3 },
+  { name: 'วัดถ้ำเสือ', lat: 13.9538, lng: 99.6052, locationId: 9 },
+  { name: 'บ้านอีต่อง', lat: 14.6592, lng: 98.3712, locationId: 6 }
+]
 
 const placeForm = ref({
   name: '',
   description: '',
   placeType: 'Attraction',
-  latitude: 14.0228,
-  longitude: 99.5328,
+  latitude: 14.0416,
+  longitude: 99.5036,
   entranceFee: 0,
   locationId: 1,
   categoryIds: [],
   tagIds: []
 })
+
+const updateCoordinates = (lat, lng, locId = null) => {
+  placeForm.value.latitude = Number(Number(lat).toFixed(6))
+  placeForm.value.longitude = Number(Number(lng).toFixed(6))
+  if (locId) {
+    placeForm.value.locationId = locId
+  }
+}
+
+const onManualCoordinateChange = () => {
+  const lat = Number(placeForm.value.latitude)
+  const lng = Number(placeForm.value.longitude)
+  if (!isNaN(lat) && !isNaN(lng) && mapInstance && markerInstance) {
+    markerInstance.setLatLng([lat, lng])
+    mapInstance.panTo([lat, lng])
+  }
+}
+
+const selectDistrict = (d) => {
+  selectedDistrict.value = d.name
+  updateCoordinates(d.lat, d.lng, d.locationId)
+  if (mapInstance && markerInstance) {
+    markerInstance.setLatLng([d.lat, d.lng])
+    mapInstance.flyTo([d.lat, d.lng], 13, { duration: 1 })
+  }
+}
+
+const onDistrictChange = () => {
+  const d = kanchanaburiDistricts.find(item => item.name === selectedDistrict.value)
+  if (d) {
+    selectDistrict(d)
+  }
+}
+
+const selectLandmark = (lm) => {
+  updateCoordinates(lm.lat, lm.lng, lm.locationId)
+  if (mapInstance && markerInstance) {
+    markerInstance.setLatLng([lm.lat, lm.lng])
+    mapInstance.flyTo([lm.lat, lm.lng], 15, { duration: 1 })
+  }
+  toast.success(`เลือกตำแหน่ง: ${lm.name}`)
+}
+
+const searchMapLocation = async () => {
+  if (!searchMapQuery.value.trim()) return
+  searchingMap.value = true
+  try {
+    const query = `${searchMapQuery.value.trim()} กาญจนบุรี`
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+    const data = await res.json()
+    if (data && data.length > 0) {
+      const lat = parseFloat(data[0].lat)
+      const lng = parseFloat(data[0].lon)
+      updateCoordinates(lat, lng)
+      if (mapInstance && markerInstance) {
+        markerInstance.setLatLng([lat, lng])
+        mapInstance.flyTo([lat, lng], 14, { duration: 1.2 })
+      }
+      toast.success(`พบตำแหน่ง: ${data[0].display_name.split(',')[0]}`)
+    } else {
+      toast.error('ไม่พบตำแหน่งที่ค้นหา')
+    }
+  } catch (e) {
+    console.error(e)
+    toast.error('เกิดข้อผิดพลาดในการค้นหา')
+  } finally {
+    searchingMap.value = false
+  }
+}
+
+const useCurrentGps = () => {
+  if (!navigator.geolocation) {
+    toast.error('เบราว์เซอร์ไม่รองรับ GPS')
+    return
+  }
+  gettingGps.value = true
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude
+      const lng = pos.coords.longitude
+      updateCoordinates(lat, lng)
+      if (mapInstance && markerInstance) {
+        markerInstance.setLatLng([lat, lng])
+        mapInstance.flyTo([lat, lng], 15, { duration: 1 })
+      }
+      gettingGps.value = false
+      toast.success('ระบุตำแหน่งจาก GPS สำเร็จ')
+    },
+    (err) => {
+      console.warn(err)
+      gettingGps.value = false
+      toast.error('ไม่สามารถดึงตำแหน่ง GPS ได้')
+    }
+  )
+}
+
+const initAdminMap = async () => {
+  await nextTick()
+  const container = document.getElementById('admin-place-map')
+  if (!container) return
+
+  if (mapInstance) {
+    mapInstance.remove()
+    mapInstance = null
+    markerInstance = null
+  }
+
+  const lat = Number(placeForm.value.latitude) || 14.0416
+  const lng = Number(placeForm.value.longitude) || 99.5036
+
+  mapInstance = L.map(container, {
+    zoomControl: true,
+    scrollWheelZoom: true
+  }).setView([lat, lng], 13)
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(mapInstance)
+
+  const pinIcon = L.divIcon({
+    className: 'custom-admin-pin',
+    html: `
+      <div style="position: relative; width: 36px; height: 42px; transform: translate(-18px, -42px); cursor: pointer;">
+        <svg viewBox="0 0 24 24" width="36" height="42" style="filter: drop-shadow(0 4px 8px rgba(37,99,235,0.45));">
+          <path fill="#2563eb" stroke="#ffffff" stroke-width="1.5" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+          <circle cx="12" cy="9" r="3" fill="#ffffff"/>
+        </svg>
+      </div>
+    `,
+    iconSize: [36, 42],
+    iconAnchor: [18, 42]
+  })
+
+  markerInstance = L.marker([lat, lng], { draggable: true, icon: pinIcon }).addTo(mapInstance)
+
+  markerInstance.on('dragend', (e) => {
+    const pos = e.target.getLatLng()
+    updateCoordinates(pos.lat, pos.lng)
+  })
+
+  mapInstance.on('click', (e) => {
+    markerInstance.setLatLng(e.latlng)
+    updateCoordinates(e.latlng.lat, e.latlng.lng)
+  })
+
+  setTimeout(() => {
+    if (mapInstance) {
+      mapInstance.invalidateSize()
+    }
+  }, 350)
+}
 
 const openAddModal = () => {
   editingPlace.value = null
@@ -1271,8 +1686,8 @@ const openAddModal = () => {
     name: '',
     description: '',
     placeType: 'Attraction',
-    latitude: 14.0228,
-    longitude: 99.5328,
+    latitude: 14.0416,
+    longitude: 99.5036,
     entranceFee: 0,
     locationId: 1,
     categoryIds: [],
@@ -1280,7 +1695,15 @@ const openAddModal = () => {
   }
   selectedFiles.value = []
   selectedFilePreviews.value = []
+  existingImages.value = []
+  deletedImageIds.value = []
+  selectedDistrict.value = ''
+  searchMapQuery.value = ''
+  showManualCoords.value = false
+  isCategoryDropdownOpen.value = false
+  isTagDropdownOpen.value = false
   showPlaceModal.value = true
+  initAdminMap()
 }
 
 const openEditModal = (place) => {
@@ -1289,35 +1712,66 @@ const openEditModal = (place) => {
     name: place.name,
     description: place.description,
     placeType: place.placeType || 'Attraction',
-    latitude: place.latitude || 14.0,
-    longitude: place.longitude || 99.5,
+    latitude: place.latitude || 14.0416,
+    longitude: place.longitude || 99.5036,
     entranceFee: place.entranceFee || 0,
     locationId: place.locationId || 1,
     categoryIds: [...(place.categoryIds || [])],
     tagIds: [...(place.tagIds || [])]
   }
   selectedFiles.value = []
-  selectedFilePreviews.value = (place.images || []).map(img => img.imageUrl)
+  selectedFilePreviews.value = []
+  existingImages.value = [...(place.images || [])]
+  deletedImageIds.value = []
+  selectedDistrict.value = ''
+  searchMapQuery.value = ''
+  showManualCoords.value = false
+  isCategoryDropdownOpen.value = false
+  isTagDropdownOpen.value = false
   showPlaceModal.value = true
+  initAdminMap()
 }
 
 const closePlaceModal = () => {
   showPlaceModal.value = false
+  isCategoryDropdownOpen.value = false
+  isTagDropdownOpen.value = false
+  if (mapInstance) {
+    mapInstance.remove()
+    mapInstance = null
+    markerInstance = null
+  }
 }
 
+onUnmounted(() => {
+  if (mapInstance) {
+    mapInstance.remove()
+    mapInstance = null
+    markerInstance = null
+  }
+})
+
 const handleFileChange = (e) => {
-  const files = Array.from(e.target.files)
-  selectedFiles.value.push(...files)
-  files.forEach(file => {
+  const files = Array.from(e.target.files || [])
+  for (const file of files) {
+    selectedFiles.value.push(file)
     const reader = new FileReader()
     reader.onload = (ev) => {
       selectedFilePreviews.value.push(ev.target.result)
     }
     reader.readAsDataURL(file)
-  })
+  }
+  e.target.value = ''
 }
 
-const removeSelectedFile = (idx) => {
+const removeExistingImage = (imgId) => {
+  existingImages.value = existingImages.value.filter(img => img.id !== imgId)
+  if (!deletedImageIds.value.includes(imgId)) {
+    deletedImageIds.value.push(imgId)
+  }
+}
+
+const removeNewFile = (idx) => {
   selectedFilePreviews.value.splice(idx, 1)
   if (idx < selectedFiles.value.length) {
     selectedFiles.value.splice(idx, 1)
@@ -1360,46 +1814,46 @@ const savePlace = async () => {
       payload.id = editingPlace.value.id
       await api.put('/Places/' + payload.id, payload)
       savedPlaceId = payload.id
-      
-      const index = places.value.findIndex(p => p.id === payload.id)
-      if(index > -1) {
-        places.value[index] = { 
-          ...places.value[index], 
-          ...payload,
-          categoryNames: allCategories.value.filter(c => payload.categoryIds.includes(c.id)).map(c => c.name),
-          tagNames: allTags.value.filter(t => payload.tagIds.includes(t.id)).map(t => t.name)
-        }
-      }
-      toast.success('อัปเดตข้อมูลสำเร็จ')
+      toast.success('อัปเดตข้อมูลสถานที่สำเร็จ')
     } else {
       const res = await api.post('/Places', payload)
       savedPlaceId = res.data.id
-      const newPlace = {
-        ...res.data,
-        ...payload,
-        categoryNames: allCategories.value.filter(c => payload.categoryIds.includes(c.id)).map(c => c.name),
-        tagNames: allTags.value.filter(t => payload.tagIds.includes(t.id)).map(t => t.name)
-      }
-      places.value.unshift(newPlace)
       toast.success('เพิ่มสถานที่ใหม่สำเร็จ')
     }
 
-    // Upload selected files
+    // 1. Delete removed existing images from backend
+    if (deletedImageIds.value.length > 0) {
+      for (const imgId of deletedImageIds.value) {
+        try {
+          await api.delete(`/PlaceImages/${imgId}`)
+        } catch (delErr) {
+          console.error(`Failed to delete image ${imgId}:`, delErr)
+        }
+      }
+    }
+
+    // 2. Upload new files
     if (savedPlaceId && selectedFiles.value.length > 0) {
       for (const file of selectedFiles.value) {
-        const formData = new FormData()
-        formData.append('file', file)
-        const uploadRes = await api.post(`/Places/${savedPlaceId}/Images`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
-        
-        const pIndex = places.value.findIndex(p => p.id === savedPlaceId)
-        if(pIndex > -1) {
-           if(!places.value[pIndex].images) places.value[pIndex].images = []
-           places.value[pIndex].images.push(uploadRes.data)
+        try {
+          const formData = new FormData()
+          formData.append('file', file)
+          await api.post(`/Places/${savedPlaceId}/Images`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+        } catch (upErr) {
+          console.error('Failed to upload image:', upErr)
         }
       }
       toast.success('อัปโหลดรูปภาพสำเร็จ')
+    }
+
+    // 3. Refresh places from server to ensure 100% data sync
+    try {
+      const refreshed = await api.get('/Places')
+      places.value = refreshed.data
+    } catch (refErr) {
+      console.error('Failed to refresh places:', refErr)
     }
 
     closePlaceModal()
@@ -1410,6 +1864,7 @@ const savePlace = async () => {
     saving.value = false
   }
 }
+
 
 const getUserName = (id) => {
   const u = users.value.find(user => user.id === id)
@@ -1457,13 +1912,3 @@ const deleteReview = async (id) => {
   }
 }
 </script>
-
-<style scoped>
-.animate-fade-in {
-  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-</style>

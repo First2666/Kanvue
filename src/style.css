@@ -1,9 +1,14 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
+@import "./assets/animations.css";
 
 @theme {
   --color-primary: #000000;
   --color-primary-hover: #333333;
   --font-sans: 'Prompt', sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -12,3 +17,4 @@ body {
   color: #111111;
   -webkit-font-smoothing: antialiased;
 }
+

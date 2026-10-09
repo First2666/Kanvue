@@ -1,6 +1,5 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 
-// Get base URL from environment variable if available, otherwise use default
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5088/api';
 
 const api = axios.create({
@@ -8,14 +7,19 @@ const api = axios.create({
     headers: { 'Content-Type': 'application/json' }
 });
 
-// Request interceptor for API calls
 api.interceptors.request.use(
   config => {
-    // We could add a JWT token here if the backend uses JWT
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers['Authorization'] = 'Bearer ' + token;
-    // }
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user && user.token) {
+          config.headers.Authorization = `Bearer ${user.token}`;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to read token from localStorage', e);
+    }
     return config;
   },
   error => {
@@ -23,15 +27,18 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for API calls
 api.interceptors.response.use(
   response => response,
   async error => {
     if (error.response && error.response.status === 401) {
-      // Handle unauthorized (e.g., clear user state and redirect to login)
-      localStorage.removeItem('user');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login?redirect=' + window.location.pathname;
+      const isLoginRequest = error.config && error.config.url && error.config.url.includes('/Users/Login');
+      if (!isLoginRequest) {
+        localStorage.removeItem('user');
+        const base = import.meta.env.BASE_URL || '/';
+        const loginPath = (base.endsWith('/') ? base + 'login' : base + '/login');
+        if (!window.location.pathname.endsWith('/login')) {
+          window.location.href = `${loginPath}?redirect=${encodeURIComponent(window.location.pathname)}`;
+        }
       }
     }
     return Promise.reject(error);

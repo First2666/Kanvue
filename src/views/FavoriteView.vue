@@ -6,7 +6,6 @@
       <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div>
           <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-600 text-xs font-bold mb-2">
-            <Heart class="w-3.5 h-3.5 fill-red-500 text-red-500" />
             <span>รายการโปรดของคุณ</span>
           </div>
           <h1 class="text-3xl font-black text-gray-900 tracking-tight">สถานที่ที่คุณบันทึกไว้</h1>
@@ -20,34 +19,53 @@
         </div>
       </div>
 
-      <!-- Category Filter Tabs (แยกหน้าตามหมวดหมู่: สถานที่ท่องเที่ยว / ที่พัก / ร้านอาหาร) -->
-      <div class="flex items-center gap-2.5 overflow-x-auto pb-2 mb-8 scrollbar-none">
-        <button 
-          v-for="tab in tabs" 
-          :key="tab.id"
-          @click="selectTab(tab.id)"
-          :class="[
-            'px-4 py-2.5 rounded-2xl text-xs md:text-sm font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer shadow-xs',
-            activeTab === tab.id
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 scale-[1.02]'
-              : 'bg-white text-gray-700 border border-gray-200/80 hover:bg-gray-50 hover:text-gray-900'
-          ]"
-        >
-          <component 
-            :is="tab.icon" 
-            class="w-4 h-4 shrink-0 transition-colors"
-            :class="activeTab === tab.id ? 'text-white' : tab.color"
-          />
-          <span>{{ tab.label }}</span>
-          <span 
+      <!-- Controls: Category Filter Tabs + Search Input -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <!-- Category Filter Tabs -->
+        <div class="flex items-center gap-2.5 overflow-x-auto py-2 -my-2 px-1 -mx-1 scrollbar-none">
+          <button 
+            v-for="tab in tabs" 
+            :key="tab.id"
+            @click="selectTab(tab.id)"
+            class="group px-4 py-2.5 rounded-2xl text-xs md:text-sm font-bold transition-all duration-200 shrink-0 flex items-center gap-2 cursor-pointer shadow-xs hover:-translate-y-0.5 hover:shadow-sm active:scale-95 border"
             :class="[
-              'px-2 py-0.5 rounded-full text-[11px] font-extrabold',
-              activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+              activeTab === tab.id
+                ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20'
+                : 'bg-white text-gray-700 border-gray-200/80 hover:bg-gray-50 hover:text-gray-900'
             ]"
           >
-            {{ tab.count }}
-          </span>
-        </button>
+            <component 
+              :is="tab.icon" 
+              class="w-4 h-4 shrink-0 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-12"
+              :class="activeTab === tab.id ? 'text-white' : tab.color"
+            />
+            <span>{{ tab.label }}</span>
+            <span 
+              :class="[
+                'px-2 py-0.5 rounded-full text-[11px] font-extrabold transition-colors',
+                activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+              ]"
+            >
+              {{ tab.count }}
+            </span>
+          </button>
+        </div>
+
+        <!-- Search Input -->
+        <div class="relative w-full md:w-80 shrink-0">
+          <div class="flex items-center bg-white rounded-2xl border border-gray-200/90 px-3.5 py-2.5 shadow-xs focus-within:border-blue-500 focus-within:ring-3 focus-within:ring-blue-100 transition-all">
+            <Search class="w-4 h-4 text-gray-400 shrink-0 mr-2.5" />
+            <input 
+              type="text" 
+              placeholder="ค้นหาชื่อ, ที่อยู่ ในรายการโปรด..." 
+              v-model="searchQuery" 
+              class="w-full outline-none text-xs md:text-sm font-semibold text-gray-800 placeholder-gray-400 bg-transparent" 
+            />
+            <button v-if="searchQuery" @click="searchQuery = ''" class="text-gray-400 hover:text-gray-600 p-0.5 cursor-pointer ml-1">
+              <X class="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Loading State -->
@@ -197,6 +215,18 @@
         </div>
       </div>
 
+      <!-- Empty State for Search -->
+      <div v-else-if="searchQuery && currentFilteredItems.length === 0" class="text-center py-20 bg-white rounded-3xl border border-gray-100 mt-6 shadow-sm">
+        <div class="w-14 h-14 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+          <Search class="w-6 h-6" />
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 mb-1">ไม่พบรายการโปรดที่ตรงกับ "{{ searchQuery }}"</h3>
+        <p class="text-gray-500 text-xs md:text-sm max-w-sm mx-auto mb-5">ลองค้นหาด้วยชื่อสถานที่ หรือคำสำคัญอื่น</p>
+        <button @click="searchQuery = ''" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs md:text-sm transition shadow-sm cursor-pointer">
+          ล้างการค้นหา
+        </button>
+      </div>
+
       <!-- Empty State for Active Tab -->
       <div v-else class="text-center py-20 bg-white rounded-3xl border border-gray-100 mt-6 shadow-sm">
         <component :is="emptyStateInfo.icon" class="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -219,12 +249,13 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { 
   Heart, MapPin, Star, Plus, ArrowRight, ChevronLeft, ChevronRight,
-  Compass, Utensils, BedDouble, Sparkles, Clock
+  Compass, Utensils, BedDouble, Sparkles, Clock, Search, X
 } from 'lucide-vue-next'
 import { useFavoriteStore } from '../stores/favorite'
 import { useTripStore } from '../stores/trip'
 import { useToast } from '../composables/useNotify'
 import api from '../services/api'
+import { getPlaceImageUrl } from '../utils/imageUrl'
 
 const route = useRoute()
 const router = useRouter()
@@ -235,6 +266,7 @@ const toast = useToast()
 const loading = ref(true)
 const allPlaces = ref([])
 const activeTab = ref(route.query.tab || 'all')
+const searchQuery = ref('')
 
 const selectTab = (tabId) => {
   activeTab.value = tabId
@@ -264,18 +296,27 @@ const tabs = computed(() => [
   { id: 'hotel', label: 'ที่พัก', icon: BedDouble, color: 'text-indigo-500', count: countByType('Accommodation') }
 ])
 
-// Filtered items based on active tab
+// Filtered items based on active tab and search query
 const currentFilteredItems = computed(() => {
+  let items = allFavorites.value
   if (activeTab.value === 'attraction') {
-    return allFavorites.value.filter(p => p.placeType === 'Attraction')
+    items = items.filter(p => p.placeType === 'Attraction')
+  } else if (activeTab.value === 'restaurant') {
+    items = items.filter(p => p.placeType === 'Restaurant')
+  } else if (activeTab.value === 'hotel') {
+    items = items.filter(p => p.placeType === 'Accommodation')
   }
-  if (activeTab.value === 'restaurant') {
-    return allFavorites.value.filter(p => p.placeType === 'Restaurant')
+
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.trim().toLowerCase()
+    items = items.filter(p => 
+      p.name?.toLowerCase().includes(q) || 
+      p.description?.toLowerCase().includes(q) || 
+      p.location?.address?.toLowerCase().includes(q)
+    )
   }
-  if (activeTab.value === 'hotel') {
-    return allFavorites.value.filter(p => p.placeType === 'Accommodation')
-  }
-  return allFavorites.value
+
+  return items
 })
 
 // Pagination (Max 6 per page)
@@ -289,7 +330,7 @@ const paginatedFavorites = computed(() => {
   return currentFilteredItems.value.slice(start, start + itemsPerPage)
 })
 
-watch(activeTab, () => {
+watch([activeTab, searchQuery], () => {
   currentPage.value = 1
 })
 
@@ -313,11 +354,7 @@ const addToTrip = (item) => {
 }
 
 const getImageUrl = (item) => {
-  if (item.images && item.images.length > 0) {
-    const primary = item.images.find(img => img.isPrimary)
-    return primary ? primary.imageUrl : item.images[0].imageUrl
-  }
-  return item.imageUrl || 'https://images.unsplash.com/photo-1543781255-a0bcabff3d35?w=500&q=80'
+  return getPlaceImageUrl(item, 'https://images.unsplash.com/photo-1543781255-a0bcabff3d35?w=500&q=80')
 }
 
 const getTypeBadge = (item) => {

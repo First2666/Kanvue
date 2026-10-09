@@ -2,6 +2,7 @@ import { useToast } from '../composables/useNotify'
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import api from '../services/api'
+import { formatImageUrl } from '../utils/imageUrl'
 import { useAuthStore } from './auth'
 
 export const useTripStore = defineStore('trip', () => {
@@ -53,7 +54,8 @@ export const useTripStore = defineStore('trip', () => {
         if (res.data && res.data.items) {
           tripItems.value = res.data.items.map((item, index) => {
             const place = item.place
-            const primaryImg = place?.images?.find(img => img.isPrimary)?.imageUrl || place?.images?.[0]?.imageUrl || ''
+            const rawImg = place?.images?.find(img => img.isPrimary)?.imageUrl || place?.images?.[0]?.imageUrl || place?.imageUrl || ''
+            const primaryImg = formatImageUrl(rawImg)
             
             // Robust place type detection from polymorphic ASP.NET JSON
             let detectedType = 'Attraction'

@@ -245,7 +245,7 @@
 
               <button @click="toggleUserLocation" :class="userLocation ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border font-bold text-xs transition cursor-pointer">
                 <MapPin class="w-3.5 h-3.5" :class="userLocation ? 'text-green-500' : 'text-gray-400'" />
-                <span>{{ userLocation ? 'ใช้ตำแหน่งปัจจุบันแล้ว' : 'ใช้ GPS เริ่มต้น' }}</span>
+                <span>{{ userLocation ? (userLocation.isSimulated ? 'ใช้ตำแหน่งจำลอง (ตัวเมือง)' : 'ใช้ตำแหน่งปัจจุบันแล้ว') : 'ใช้ GPS เริ่มต้น' }}</span>
               </button>
             </div>
           </div>
@@ -695,10 +695,18 @@ watch(activeStep, (newStep) => {
   }
 })
 
-// Safe length watcher: only clamp if activeStep exceeds newLen (allow activeStep === newLen for completed)
-watch(() => tripStore.tripItems.length, (newLen) => {
+// Safe length watcher: only clamp if activeStep exceeds newLen, and reset to 0 if starting fresh
+watch(() => tripStore.tripItems.length, (newLen, oldLen) => {
   if (tripStore.isLoading) return
-  if (newLen > 0 && activeStep.value > newLen) {
+  if (newLen === 0) {
+    activeStep.value = 0
+    return
+  }
+  if ((oldLen === 0 || oldLen === undefined) && newLen > 0 && activeStep.value >= newLen) {
+    activeStep.value = 0
+    return
+  }
+  if (activeStep.value > newLen) {
     activeStep.value = newLen
   }
 })
@@ -1042,38 +1050,79 @@ const tripStartTime = ref('08:00') // Default start time
     }
   };
 
-  const toggleUserLocation = () => {
+  const toggleUserLocation = async () => {
     if (userLocation.value) {
       userLocation.value = null;
       stopGeoWatcher();
       toast.info('ปิดระบบนำทางและการเช็คอินอัตโนมัติแล้ว');
-    } else {
-      if ("geolocation" in navigator) {
-        toast.success('เปิดระบบนำทางและเช็คอินอัตโนมัติเมื่อใกล้ถึงที่หมาย (300m)');
-        
-        // Initial fetch
-        navigator.geolocation.getCurrentPosition((pos) => {
-          userLocation.value = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          checkAutoCheckIn(pos.coords.latitude, pos.coords.longitude);
-        }, (err) => {
-          alert("ไม่สามารถดึงตำแหน่งปัจจุบันได้ กรุณาอนุญาตให้ใช้งาน GPS");
-        });
+      return;
+    }
 
-        // Watch location
-        geoWatcherId = navigator.geolocation.watchPosition((pos) => {
-          userLocation.value = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          checkAutoCheckIn(pos.coords.latitude, pos.coords.longitude);
-        }, (err) => {
-          console.error("GPS Watch error", err);
-        }, {
-          enableHighAccuracy: true,
-          maximumAge: 10000,
-          timeout: 5000
-        });
+    const setSimulatedLocation = () => {
+      // พิกัดเริ่มต้นจำลอง: ตัวเมืองกาญจนบุรี (สถานีรถไฟกาญจนบุรี)
+      userLocation.value = { lat: 14.0228, lng: 99.5328, isSimulated: true };
+      toast.success('เปิดระบบนำทางด้วยตำแหน่งจำลอง (ตัวเมืองกาญจนบุรี)');
+      checkAutoCheckIn(14.0228, 99.5328);
+    };
 
-      } else {
-        alert("เบราว์เซอร์นี้ไม่รองรับการดึงตำแหน่ง");
+    const handleGpsError = async (err) => {
+      stopGeoWatcher();
+      console.warn("GPS Access Error:", err);
+
+      const isHttp = location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
+      const reasonMsg = isHttp
+        ? 'เนื่องจากเว็บเข้าใช้งานผ่าน HTTP (ยังไม่ใช่ HTTPS) เบราว์เซอร์จึงบล็อกการเข้าถึง GPS จริงตามมาตรฐานความปลอดภัย'
+        : 'ไม่สามารถระบุพิกัด GPS จริงได้ (เบราว์เซอร์ไม่อนุญาตหรือยังไม่ได้เปิด GPS)';
+
+      const ok = await confirm({
+        title: 'เปิดใช้ตำแหน่งจำลอง?',
+        message: `${reasonMsg}\n\nต้องการใช้ 'ตำแหน่งจำลอง (ตัวเมืองกาญจนบุรี)' เพื่อทดสอบคำนวณเส้นทางและเช็คอินอัตโนมัติหรือไม่?`,
+        confirmText: 'ใช้ตำแหน่งจำลอง',
+        cancelText: 'ยกเลิก',
+        type: 'warning'
+      });
+
+      if (ok) {
+        setSimulatedLocation();
       }
+    };
+
+    if ("geolocation" in navigator) {
+      toast.info('กำลังค้นหาพิกัด GPS...');
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          userLocation.value = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          toast.success('เปิดระบบนำทางและเช็คอินอัตโนมัติเมื่อใกล้ถึงที่หมาย (300m)');
+          checkAutoCheckIn(pos.coords.latitude, pos.coords.longitude);
+
+          // Watch location only after successful initial fetch
+          geoWatcherId = navigator.geolocation.watchPosition(
+            (watchPos) => {
+              userLocation.value = { lat: watchPos.coords.latitude, lng: watchPos.coords.longitude };
+              checkAutoCheckIn(watchPos.coords.latitude, watchPos.coords.longitude);
+            },
+            (watchErr) => {
+              console.error("GPS Watch error", watchErr);
+            },
+            {
+              enableHighAccuracy: true,
+              maximumAge: 10000,
+              timeout: 10000
+            }
+          );
+        },
+        async (err) => {
+          await handleGpsError(err);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 6000,
+          maximumAge: 10000
+        }
+      );
+    } else {
+      await handleGpsError({ message: 'Geolocation not supported' });
     }
   }
 

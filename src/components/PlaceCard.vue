@@ -13,8 +13,8 @@
       <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
 
       <!-- Top: Favorite -->
-      <button @click.stop="toggleFavorite" class="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg" :class="isFavorite ? 'bg-red-500' : 'bg-white/80 backdrop-blur-sm hover:bg-white'">
-        <HeartIcon :class="['w-[18px] h-[18px] transition-all', isFavorite ? 'text-white fill-white' : 'text-gray-500']" />
+      <button @click.stop="toggleFavorite" class="group/fav absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg hover:scale-115 active:scale-90 cursor-pointer" :class="isFavorite ? 'bg-red-500' : 'bg-white/80 backdrop-blur-sm hover:bg-white'">
+        <HeartIcon :class="['w-[18px] h-[18px] transition-transform duration-300 group-hover/fav:scale-125', isFavorite ? 'text-white fill-white' : 'text-gray-500 group-hover/fav:text-red-500 group-hover/fav:fill-red-500']" />
       </button>
 
       <!-- Bottom on image: Price -->

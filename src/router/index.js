@@ -1,4 +1,4 @@
-﻿import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import PlaceDetailView from '../views/PlaceDetailView.vue'
 import PlacesView from '../views/PlacesView.vue'
@@ -22,7 +22,12 @@ const router = createRouter({
     { path: '/favorites', name: 'favorites', component: FavoriteView, meta: { requiresAuth: true } },
     { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
     { path: '/login', name: 'login', component: LoginView },
-        { path: '/admin', name: 'admin', component: () => import('../views/AdminView.vue') },
+    { 
+      path: '/admin', 
+      name: 'admin', 
+      component: () => import('../views/AdminView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView }
   ],
   scrollBehavior(to, from, savedPosition) {
@@ -34,6 +39,8 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   if (to.meta.requiresAuth && !authStore.user) {
     next('/login?redirect=' + to.path)
+  } else if (to.meta.requiresAdmin && authStore.user?.role !== 1) {
+    next('/')
   } else {
     next()
   }

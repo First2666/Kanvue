@@ -62,15 +62,3 @@ import { useToast, useDialog } from '../composables/useNotify'
 const { toasts } = useToast()
 const { dialog, cancel } = useDialog()
 </script>
-
-<style scoped>
-.toast-enter-active { animation: slideIn 0.35s cubic-bezier(0.21, 1.02, 0.73, 1); }
-.toast-leave-active { animation: slideOut 0.25s ease-in forwards; }
-@keyframes slideIn { from { opacity: 0; transform: translateX(80px) scale(0.95); } to { opacity: 1; transform: translateX(0) scale(1); } }
-@keyframes slideOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(80px) scale(0.95); } }
-
-.dialog-enter-active { transition: all 0.3s cubic-bezier(0.21, 1.02, 0.73, 1); }
-.dialog-leave-active { transition: all 0.2s ease-in; }
-.dialog-enter-from, .dialog-leave-to { opacity: 0; }
-.dialog-enter-from > div:last-child, .dialog-leave-to > div:last-child { transform: scale(0.9) translateY(20px); }
-</style>

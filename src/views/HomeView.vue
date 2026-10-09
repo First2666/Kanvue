@@ -501,6 +501,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { StarIcon, HeartIcon, MapPin, Clock, Plus, ArrowRight, Sparkles, Flame, Leaf, Landmark, Ticket, Search, X, Compass, Utensils, BedDouble, CheckCircle2 } from 'lucide-vue-next'
 import PlaceCard from '../components/PlaceCard.vue'
 import api from '../services/api'
+import { getPlaceImageUrl } from '../utils/imageUrl'
 import { useTripStore } from '../stores/trip'
 import { useFavoriteStore } from '../stores/favorite'
 import { useToast } from '../composables/useNotify'
@@ -806,12 +807,7 @@ const getPlaceBadge = (place) => {
 
 // Helper to get image from our model
 const getImageUrl = (place) => {
-  if (!place) return 'https://images.unsplash.com/photo-1540304658097-f4955b23d917?auto=format&fit=crop&q=80&w=800'
-  if (place.images && place.images.length > 0) {
-    const primary = place.images.find(img => img.isPrimary)
-    return primary ? primary.imageUrl : place.images[0].imageUrl
-  }
-  return place.imageUrl || 'https://images.unsplash.com/photo-1540304658097-f4955b23d917?auto=format&fit=crop&q=80&w=800' // fallback
+  return getPlaceImageUrl(place, 'https://images.unsplash.com/photo-1540304658097-f4955b23d917?auto=format&fit=crop&q=80&w=800')
 }
 
 </script>

@@ -43,13 +43,13 @@
     <!-- Category Filter Pills -->
     <div class="max-w-[1200px] mx-auto px-6 py-4">
       <div class="flex items-center justify-between gap-4 flex-wrap">
-        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <div class="flex items-center gap-2 overflow-x-auto py-2.5 -my-2.5 px-1 -mx-1 scrollbar-none">
           <button 
             @click="activeTag = 'ทั้งหมด'" 
-            class="px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all shrink-0 cursor-pointer"
+            class="px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all duration-200 shrink-0 cursor-pointer border hover:-translate-y-0.5 hover:shadow-sm active:scale-95"
             :class="activeTag === 'ทั้งหมด' 
-              ? 'bg-[#003366] text-white shadow-md shadow-blue-900/20 scale-[1.02]' 
-              : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'"
+              ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-600/30' 
+              : 'bg-white border-gray-200 text-gray-700 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'"
           >
             ทั้งหมด
           </button>
@@ -58,13 +58,13 @@
             v-for="cat in categories" 
             :key="cat.name" 
             @click="activeTag = cat.name"
-            class="px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
+            class="group px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all duration-200 shrink-0 flex items-center gap-1.5 cursor-pointer border hover:-translate-y-0.5 hover:shadow-sm active:scale-95"
             :class="activeTag === cat.name 
-              ? 'bg-[#003366] text-white shadow-md shadow-blue-900/20 scale-[1.02]' 
-              : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'"
+              ? cat.activeClass + ' shadow-md' 
+              : 'bg-white border-gray-200 text-gray-700 ' + cat.hoverClass"
           >
-            <component :is="cat.icon" class="w-3.5 h-3.5" :class="activeTag === cat.name ? 'text-white' : cat.color" />
-            <span>{{ cat.name }}</span>
+            <component :is="cat.icon" class="w-3.5 h-3.5 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-12" :class="activeTag === cat.name ? 'text-white' : cat.color" />
+            <span :class="activeTag === cat.name ? 'text-white' : ''">{{ cat.name }}</span>
           </button>
         </div>
 
@@ -121,11 +121,11 @@
             <!-- Top Right: Favorite Button -->
             <button 
               @click.stop="toggleFav(item.id)" 
-              class="absolute top-4 right-4 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-md cursor-pointer"
+              class="group absolute top-4 right-4 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-md cursor-pointer hover:scale-110 active:scale-90"
               :class="favoriteStore.isFavorite(item.id) ? 'bg-red-500 scale-110' : 'bg-black/35 backdrop-blur-md hover:bg-white text-white hover:text-red-500 border border-white/20'"
               title="บันทึกสถานที่ถูกใจ"
             >
-              <HeartIcon class="w-4 h-4" :class="favoriteStore.isFavorite(item.id) ? 'text-white fill-white' : ''" />
+              <HeartIcon class="w-4 h-4 transition-transform duration-300 group-hover:scale-125" :class="favoriteStore.isFavorite(item.id) ? 'text-white fill-white' : 'group-hover:fill-current'" />
             </button>
 
             <!-- Bottom Right Price Pill -->
@@ -244,6 +244,7 @@ import {
   Compass, Flame, Landmark, TreePine, ChevronLeft, ChevronRight, Clock 
 } from 'lucide-vue-next'
 import api from '../services/api'
+import { getPlaceImageUrl } from '../utils/imageUrl'
 import { useTripStore } from '../stores/trip'
 import { useFavoriteStore } from '../stores/favorite'
 import { useToast } from '../composables/useNotify'
@@ -272,9 +273,9 @@ const sortOptions = [
 ]
 
 const categories = [
-  { name: 'ยอดฮิต', icon: Flame, color: 'text-amber-500' },
-  { name: 'ธรรมชาติ', icon: TreePine, color: 'text-emerald-500' },
-  { name: 'ประวัติศาสตร์', icon: Landmark, color: 'text-amber-600' }
+  { name: 'ยอดฮิต', icon: Flame, color: 'text-rose-500', activeClass: 'bg-rose-500 border-rose-500 text-white shadow-rose-500/20', hoverClass: 'hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200' },
+  { name: 'ธรรมชาติ', icon: TreePine, color: 'text-emerald-500', activeClass: 'bg-emerald-500 border-emerald-500 text-white shadow-emerald-500/20', hoverClass: 'hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200' },
+  { name: 'ประวัติศาสตร์', icon: Landmark, color: 'text-amber-600', activeClass: 'bg-amber-500 border-amber-500 text-white shadow-amber-500/20', hoverClass: 'hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200' }
 ]
 
 const loading = ref(true)
@@ -285,11 +286,7 @@ const priceFilter = ref('all')
 const sortFilter = ref('recommend')
 
 const getImageUrl = (item) => {
-  if (item.images && item.images.length > 0) {
-    const primary = item.images.find(img => img.isPrimary)
-    return primary ? primary.imageUrl : item.images[0].imageUrl
-  }
-  return item.imageUrl || 'https://images.unsplash.com/photo-1543781255-a0bcabff3d35?w=500&q=80'
+  return getPlaceImageUrl(item, 'https://images.unsplash.com/photo-1543781255-a0bcabff3d35?w=500&q=80')
 }
 
 const formatTimeStr = (t) => {
